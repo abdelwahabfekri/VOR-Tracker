@@ -12,7 +12,6 @@ const config: Config = {
         // Aizer brand
         navy:   { DEFAULT: "#0F2A4A", 900: "#0B1F38", 700: "#1B3A5C", 600: "#24507A" },
         star:   { DEFAULT: "#2FA4E7", light: "#8FD0F2", 400: "#5BBDF0", 200: "#BFE4F7" },
-        turquoise: { DEFAULT: "#14B8AE", hover: "#0FA69C" },
         // Track colors (shipping theme)
         appt:   { DEFAULT: "#24507A", soft: "#E8F1F8" },   // Track 1 — patient/appointment (blue)
         docs:   { DEFAULT: "#2E7D5B", soft: "#E4EFEA" },   // Track 2 — documents (green)

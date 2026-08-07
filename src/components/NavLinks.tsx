@@ -29,8 +29,8 @@ export function TopNav({
     .join("");
 
   return (
-    <header className="sticky top-0 z-40 bg-navy-900 text-white shadow-pop">
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2.5 md:px-8">
+    <header className="sticky top-0 z-40 rounded-b-2xl bg-navy-900 text-white shadow-pop">
+      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 md:px-8">
         {/* Left: nav links */}
         <nav className="flex items-center gap-1 overflow-x-auto">
           {links.map((l) => {
@@ -39,7 +39,7 @@ export function TopNav({
               <Link
                 key={l.href}
                 href={l.href}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition sm:px-3 ${
+                className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-medium transition sm:px-3 ${
                   active ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >
@@ -51,8 +51,9 @@ export function TopNav({
         </nav>
 
         {/* Center: logo */}
-        <Link href="/tracking" className="justify-self-center">
+        <Link href="/tracking" className="flex flex-col items-center justify-self-center">
           <Image src="/logo-white.png" alt="Aizer" width={108} height={30} priority />
+          <span className="mt-1 text-[11px] font-normal text-white/60">Vision Department</span>
         </Link>
 
         {/* Right: new referral (admin) + user */}
@@ -60,7 +61,7 @@ export function TopNav({
           {isAdmin && (
             <Link
               href="/new"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-turquoise px-3 py-2 text-sm font-semibold text-navy-900 shadow-sm transition hover:bg-turquoise-hover sm:px-3.5"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-star-400 px-3 py-2 text-sm font-semibold text-navy-900 shadow-sm transition hover:brightness-95 sm:px-3.5"
             >
               <span className="text-base leading-none">＋</span>
               <span className="hidden sm:inline">New referral</span>
