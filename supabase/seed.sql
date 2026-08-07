@@ -25,34 +25,34 @@ insert into referrals
    next_action_due, last_action_at, referral_date, completed_at, closed_at)
 select * from (
   select
-    'VOR-9990001', (select akilov from p), 'Retina Associates', 'Retina', '212-555-0143', '212-555-0144',
-    'referral_created'::appointment_status, 'awaiting_appointment'::document_status, null,
+    'VOR-9990001'::text, (select akilov from p), 'Retina Associates'::text, 'Retina'::text, '212-555-0143'::text, '212-555-0144'::text,
+    'referral_created'::appointment_status, 'awaiting_appointment'::document_status, null::timestamptz,
     0, 0, 0,
-    now() - interval '6 hours', now() - interval '30 hours', now() - interval '30 hours', null, null
+    now() - interval '6 hours', now() - interval '30 hours', now() - interval '30 hours', null::timestamptz, null::timestamptz
   union all
   select
-    'VOR-9990002', (select berger from p), 'Glaucoma Center of NY', 'Glaucoma', '212-555-0170', null,
-    'patient_contacted', 'awaiting_appointment', null,
+    'VOR-9990002', (select berger from p), 'Glaucoma Center of NY', 'Glaucoma', '212-555-0170', null::text,
+    'patient_contacted'::appointment_status, 'awaiting_appointment'::document_status, null::timestamptz,
     2, 0, 0,
-    now() - interval '1 day', now() - interval '3 days', now() - interval '9 days', null, null
+    now() - interval '1 day', now() - interval '3 days', now() - interval '9 days', null::timestamptz, null::timestamptz
   union all
   select
     'VOR-9990003', (select goldberg from p), 'Cornea Specialists', 'Cornea', '646-555-0102', '646-555-0103',
-    'appointment_scheduled', 'awaiting_appointment', now() + interval '2 days',
+    'appointment_scheduled'::appointment_status, 'awaiting_appointment'::document_status, now() + interval '2 days',
     1, 0, 0,
-    now() + interval '1 day', now() - interval '2 days', now() - interval '7 days', null, null
+    now() + interval '1 day', now() - interval '2 days', now() - interval '7 days', null::timestamptz, null::timestamptz
   union all
   select
     'VOR-9990004', (select herbik from p), 'Oculoplastics Group', 'Oculoplastics', '917-555-0188', '917-555-0189',
-    'appointment_completed', 'documents_requested', now() - interval '3 days',
+    'appointment_completed'::appointment_status, 'documents_requested'::document_status, now() - interval '3 days',
     1, 0, 1,
-    now() - interval '1 day', now() - interval '2 days', now() - interval '18 days', now() - interval '3 days', null
+    now() - interval '1 day', now() - interval '2 days', now() - interval '18 days', now() - interval '3 days', null::timestamptz
   union all
   select
     'VOR-9990005', (select klein from p), 'Neuro-Ophthalmology Assoc.', 'Neuro-ophth', '212-555-0210', '212-555-0211',
-    'appointment_completed', 'closed', now() - interval '20 days',
+    'appointment_completed'::appointment_status, 'closed'::document_status, now() - interval '20 days',
     1, 1, 0,
-    null, now() - interval '10 days', now() - interval '34 days', now() - interval '20 days', now() - interval '10 days'
+    null::timestamptz, now() - interval '10 days', now() - interval '34 days', now() - interval '20 days', now() - interval '10 days'
 ) as rows
 on conflict (code) do nothing;
 

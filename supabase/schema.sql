@@ -90,6 +90,8 @@ create table referrals (
   -- Directory info (NON-PHI)
   referring_provider_id uuid not null references referring_providers(id),
   specialist_name       text,                            -- external specialist referred to
+  specialist_phone      text,
+  specialist_fax        text,
   specialty             text,                            -- e.g. 'Retina', 'Glaucoma'
 
   -- Two-track state
