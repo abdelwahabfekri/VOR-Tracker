@@ -102,6 +102,39 @@ export async function performAction(
   return { ok: true, flag };
 }
 
+// ---------------------------------------------------------------------------
+// Permanently remove a referral (admin only — also enforced by RLS).
+// status_history rows cascade-delete with it.
+// ---------------------------------------------------------------------------
+export async function deleteReferral(
+  referralId: string,
+  confirmCode: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  const { data: me } = await supabase.from("app_users").select("role").eq("id", user.id).single();
+  if (me?.role !== "admin") return { ok: false, error: "Admin only." };
+
+  const { data: referral, error: readErr } = await supabase
+    .from("referrals")
+    .select("id, code")
+    .eq("id", referralId)
+    .single();
+  if (readErr || !referral) return { ok: false, error: "Referral not found." };
+  if (referral.code !== confirmCode) return { ok: false, error: "Code confirmation didn't match." };
+
+  const { error } = await supabase.from("referrals").delete().eq("id", referralId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/tracking");
+  revalidatePath("/todo");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = createClient();
   await supabase.auth.signOut();

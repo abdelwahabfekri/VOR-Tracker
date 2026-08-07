@@ -29,7 +29,7 @@ export type Action =
   // Track 1
   | { kind: "log_no_answer" }          // failed contact attempt (scheduling phase)
   | { kind: "book_appointment"; slot: string }
-  | { kind: "confirm_attendance" }     // pre-call: patient confirms
+  | { kind: "confirm_attendance"; slot?: string }   // pre-call: confirm; optionally correct the slot
   | { kind: "precall_no_answer" }      // pre-call: couldn't reach -> status held
   | { kind: "mark_completed" }         // post-call: visit happened
   | { kind: "mark_no_show" }           // post-call: no-show -> silent revert
@@ -119,10 +119,14 @@ export function applyAction(r: Referral, action: Action): TransitionResult {
 
     // ---------------- Track 1: confirmation + visit ----------------
     case "confirm_attendance": {
-      const slotMs = r.appointment_slot ? new Date(r.appointment_slot).getTime() : now;
+      // If the user entered a corrected date at confirmation time, use and persist it;
+      // otherwise fall back to the slot already booked.
+      const confirmedSlot = action.slot ?? r.appointment_slot;
+      const slotMs = confirmedSlot ? new Date(confirmedSlot).getTime() : now;
       return {
         appointment_state: "appointment_confirmed",
-        // post-appointment completion check due 24h after slot
+        appointment_slot: confirmedSlot,               // lock in the confirmed date
+        // post-appointment completion check due 24h after the confirmed slot
         next_action_due: iso(slotMs + 24 * HOUR),
         last_action_at: nowIso,
         log: { track: "appointment", from: a, to: "appointment_confirmed", note_code: "confirmed" },

@@ -14,7 +14,7 @@ export function QuickActions({
   onAction: (a: Action) => void;
   disabled?: boolean;
 }) {
-  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule">(null);
+  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule" | "confirm">(null);
   const a = referral.appointment_state;
   const d = referral.document_state;
 
@@ -42,11 +42,23 @@ export function QuickActions({
   if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => onAction({ kind: "confirm_attendance" })}>Confirmed</button>
+        <button className={primary} disabled={disabled} onClick={() => setSlotOpen("confirm")}>Confirmed</button>
         <button className={ghost} disabled={disabled} onClick={() => onAction({ kind: "precall_no_answer" })}>No answer</button>
         <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("reschedule")}>Reschedule</button>
+
+        {slotOpen === "confirm" && (
+          <SlotPrompt
+            initial={referral.appointment_slot ?? ""}
+            confirmLabel="Confirm"
+            onPick={(slot) => { onAction({ kind: "confirm_attendance", slot }); setSlotOpen(null); }}
+            onCancel={() => setSlotOpen(null)}
+          />
+        )}
         {slotOpen === "reschedule" && (
-          <SlotPrompt onPick={(slot) => { onAction({ kind: "reschedule", slot }); setSlotOpen(null); }} onCancel={() => setSlotOpen(null)} />
+          <SlotPrompt
+            onPick={(slot) => { onAction({ kind: "reschedule", slot }); setSlotOpen(null); }}
+            onCancel={() => setSlotOpen(null)}
+          />
         )}
       </div>
     );
@@ -97,8 +109,27 @@ export function QuickActions({
   return <span className="text-xs text-muted">No action</span>;
 }
 
-function SlotPrompt({ onPick, onCancel }: { onPick: (slot: string) => void; onCancel: () => void }) {
-  const [val, setVal] = useState("");
+function SlotPrompt({
+  onPick,
+  onCancel,
+  initial = "",
+  confirmLabel = "Set",
+}: {
+  onPick: (slot: string) => void;
+  onCancel: () => void;
+  initial?: string;   // ISO string to prefill (confirmation case)
+  confirmLabel?: string;
+}) {
+  // Convert ISO to datetime-local format (no seconds/timezone).
+  const toLocalInput = (iso: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const off = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - off).toISOString().slice(0, 16);
+  };
+
+  const [val, setVal] = useState(toLocalInput(initial));
+
   return (
     <div className="flex items-center gap-1.5">
       <input
@@ -112,7 +143,7 @@ function SlotPrompt({ onPick, onCancel }: { onPick: (slot: string) => void; onCa
         disabled={!val}
         onClick={() => onPick(new Date(val).toISOString())}
       >
-        Set
+        {confirmLabel}
       </button>
       <button className="text-xs text-muted hover:text-ink" onClick={onCancel}>✕</button>
     </div>

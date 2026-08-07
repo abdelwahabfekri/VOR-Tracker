@@ -5,6 +5,7 @@ import { TrackProgress } from "@/components/TrackProgress";
 import { CodeChip, ApptChip, DocChip, AttemptBadge, Card } from "@/components/ui";
 import { CAPS } from "@/lib/statusEngine";
 import { DetailActions } from "@/components/DetailActions";
+import { DeleteReferral } from "@/components/DeleteReferral";
 import { ScanHistory } from "@/components/ScanHistory";
 
 export default async function ReferralDetail({ params }: { params: { code: string } }) {
@@ -83,6 +84,8 @@ export default async function ReferralDetail({ params }: { params: { code: strin
               </div>
             </dl>
           </Card>
+
+          {isAdmin && <DeleteReferral referral={referral} />}
         </div>
 
         {/* Right: scan history */}
