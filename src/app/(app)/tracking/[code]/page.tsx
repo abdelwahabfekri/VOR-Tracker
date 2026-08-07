@@ -10,6 +10,7 @@ import { ScanHistory } from "@/components/ScanHistory";
 import { CallLogTable } from "@/components/CallLogTable";
 import { InboundCallPanel } from "@/components/InboundCallPanel";
 import { firstReachedMap } from "@/lib/callLog";
+import { fmtDateTime } from "@/lib/tz";
 
 export default async function ReferralDetail({ params }: { params: { code: string } }) {
   const me = await getMe();
@@ -76,10 +77,10 @@ export default async function ReferralDetail({ params }: { params: { code: strin
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">Details</h2>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <Field label="Opened" value={fmt(referral.referral_date)} />
-              <Field label="Appointment slot" value={referral.appointment_slot ? fmt(referral.appointment_slot) : null} />
-              <Field label="Last update" value={fmt(referral.last_action_at)} />
-              <Field label="Completed" value={referral.completed_at ? fmt(referral.completed_at) : null} />
+              <Field label="Opened" value={fmtDateTime(referral.referral_date)} />
+              <Field label="Appointment slot" value={referral.appointment_slot ? fmtDateTime(referral.appointment_slot) : null} />
+              <Field label="Last update" value={fmtDateTime(referral.last_action_at)} />
+              <Field label="Completed" value={referral.completed_at ? fmtDateTime(referral.completed_at) : null} />
               <div>
                 <dt className="text-muted">Contact attempts</dt>
                 <dd className="mt-0.5"><AttemptBadge n={referral.contact_attempts} cap={CAPS.contact} label="Contact" /></dd>
@@ -123,11 +124,4 @@ function Field({ label, value, mono }: { label: string; value: string | null; mo
       <dd className={`mt-0.5 text-ink ${mono ? "font-mono" : ""}`}>{value || "—"}</dd>
     </div>
   );
-}
-
-function fmt(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-  });
 }

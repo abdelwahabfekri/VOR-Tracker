@@ -1,5 +1,6 @@
 import type { StatusHistoryEntry } from "@/lib/types";
 import { noteLabel } from "@/lib/noteCodes";
+import { fmtDateTime } from "@/lib/tz";
 
 // Shipping-style "scan history": newest event first, each timestamped.
 export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
@@ -26,10 +27,7 @@ export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
                 {noteLabel(e.note_code)}
               </div>
               <div className="mt-0.5 text-xs text-muted">
-                {new Date(e.changed_at).toLocaleString(undefined, {
-                  month: "short", day: "numeric", year: "numeric",
-                  hour: "numeric", minute: "2-digit",
-                })}
+                {fmtDateTime(e.changed_at)}
                 <span className="ml-2 uppercase tracking-wide text-[10px] text-muted/70">
                   {e.track === "document" ? "records" : "appointment"}
                 </span>

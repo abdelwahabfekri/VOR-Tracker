@@ -9,6 +9,7 @@ import { performAction } from "@/lib/actions";
 import { QuickActions } from "@/components/QuickActions";
 import { CodeChip, AttemptBadge, Card } from "@/components/ui";
 import { ProviderFilter } from "@/components/ProviderFilter";
+import { fmtShortDate } from "@/lib/tz";
 
 export function TodoBoard({
   referrals,
@@ -155,10 +156,8 @@ function Section({
 
 function fmtDue(iso: string | null): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = Math.round((d.getTime() - now.getTime()) / (1000 * 60 * 60));
+  const diff = Math.round((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60));
   if (diff < 0) return `${Math.abs(diff)}h ago`;
   if (diff < 24) return `in ${diff}h`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return fmtShortDate(iso);
 }

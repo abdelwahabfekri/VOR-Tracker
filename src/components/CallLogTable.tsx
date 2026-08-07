@@ -1,5 +1,6 @@
 import type { StatusHistoryEntry } from "@/lib/types";
 import { toCallLog } from "@/lib/callLog";
+import { fmtDateTime } from "@/lib/tz";
 
 export function CallLogTable({ entries }: { entries: StatusHistoryEntry[] }) {
   const rows = toCallLog(entries);
@@ -23,12 +24,7 @@ export function CallLogTable({ entries }: { entries: StatusHistoryEntry[] }) {
           {rows.map((r, i) => (
             <tr key={r.id} className="border-b border-line/60 last:border-0">
               <td className="py-2.5 pr-3 text-muted">{rows.length - i}</td>
-              <td className="py-2.5 pr-3 text-ink">
-                {new Date(r.at).toLocaleString(undefined, {
-                  month: "short", day: "numeric", year: "numeric",
-                  hour: "numeric", minute: "2-digit",
-                })}
-              </td>
+              <td className="py-2.5 pr-3 text-ink">{fmtDateTime(r.at)}</td>
               <td className="py-2.5 pr-3">
                 <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                   r.track === "document" ? "bg-docs-soft text-docs" : "bg-appt-soft text-appt"

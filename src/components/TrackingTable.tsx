@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Referral, ReferringProvider } from "@/lib/types";
 import { ApptChip, DocChip, CodeChip, Card } from "@/components/ui";
 import { ProviderFilter } from "@/components/ProviderFilter";
+import { fmtDate } from "@/lib/tz";
 
 export function TrackingTable({
   referrals,
@@ -90,9 +91,4 @@ export function TrackingTable({
       <p className="mt-3 text-xs text-muted">{rows.length} referral{rows.length === 1 ? "" : "s"}</p>
     </div>
   );
-}
-
-function fmtDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }

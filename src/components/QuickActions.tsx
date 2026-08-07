@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Referral } from "@/lib/types";
 import type { Action } from "@/lib/statusEngine";
+import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 // Presents only the actions that make sense for the referral's current state.
 export function QuickActions({
@@ -121,15 +122,7 @@ function SlotPrompt({
   initial?: string;   // ISO string to prefill (confirmation case)
   confirmLabel?: string;
 }) {
-  // Convert ISO to datetime-local format (no seconds/timezone).
-  const toLocalInput = (iso: string) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    const off = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - off).toISOString().slice(0, 16);
-  };
-
-  const [val, setVal] = useState(toLocalInput(initial));
+  const [val, setVal] = useState(initial ? isoToNyInput(initial) : "");
 
   return (
     <div className="flex items-center gap-1.5">
@@ -139,10 +132,11 @@ function SlotPrompt({
         onChange={(e) => setVal(e.target.value)}
         className="rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-star"
       />
+      <span className="text-[10px] font-medium text-muted" title="Eastern Time">ET</span>
       <button
         className="rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
         disabled={!val}
-        onClick={() => onPick(new Date(val).toISOString())}
+        onClick={() => onPick(nyInputToIso(val))}
       >
         {confirmLabel}
       </button>

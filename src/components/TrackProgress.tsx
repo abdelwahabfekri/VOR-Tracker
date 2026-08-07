@@ -2,6 +2,7 @@
 
 import type { Referral, AppointmentStatus, DocumentStatus } from "@/lib/types";
 import { TERMINAL_APPT } from "@/lib/types";
+import { fmtShortDate, fmtTime } from "@/lib/tz";
 
 // The full journey as an ordered set of "shipping" stops across both tracks.
 const APPT_STOPS: { key: AppointmentStatus; label: string }[] = [
@@ -120,9 +121,9 @@ function Stop({
       </span>
       {date && (done || current) && !dormant && !faded && (
         <span className="mt-0.5 text-center text-[10px] leading-tight text-muted">
-          {new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+          {fmtShortDate(date)}
           {" · "}
-          {new Date(date).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+          {fmtTime(date)}
         </span>
       )}
     </div>
