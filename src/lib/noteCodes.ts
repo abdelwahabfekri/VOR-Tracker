@@ -2,11 +2,11 @@
 // These are NON-PHI reason codes — never free text.
 export const NOTE_LABEL: Record<string, string> = {
   created: "Referral created",
-  no_answer: "No answer — logged attempt",
+  no_answer: "No answer — VM left",
   no_answer_cap: "No answer — max attempts reached, parked",
   booked: "Appointment booked",
   confirmed: "Attendance confirmed (pre-call)",
-  precall_no_answer: "Pre-call: could not reach — held",
+  precall_no_answer: "Pre-call: no answer — VM left",
   visit_done: "Visit completed",
   no_show: "No-show — returned to scheduling",
   rescheduled: "Appointment rescheduled",
@@ -22,5 +22,8 @@ export const NOTE_LABEL: Record<string, string> = {
 
 export function noteLabel(code: string | null): string {
   if (!code) return "Status change";
-  return NOTE_LABEL[code] ?? code;
+  const inbound = code.startsWith("inbound_");
+  const base = inbound ? code.slice("inbound_".length) : code;
+  const label = NOTE_LABEL[base] ?? base;
+  return inbound ? `Patient call — ${label}` : label;
 }

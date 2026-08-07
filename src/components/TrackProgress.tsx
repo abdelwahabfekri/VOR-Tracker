@@ -30,7 +30,7 @@ function stateIndex(r: Referral) {
   return { ai, di };
 }
 
-export function TrackProgress({ referral }: { referral: Referral }) {
+export function TrackProgress({ referral, dates }: { referral: Referral; dates?: Record<string, string> }) {
   const { ai, di } = stateIndex(referral);
   const track2Active = referral.appointment_state === "appointment_completed";
   const declined = TERMINAL_APPT.includes(referral.appointment_state);
@@ -51,6 +51,7 @@ export function TrackProgress({ referral }: { referral: Referral }) {
               current={current && !declined}
               first={i === 0}
               faded={declined}
+              date={dates?.[stop.key]}
             />
           );
         })}
@@ -68,6 +69,7 @@ export function TrackProgress({ referral }: { referral: Referral }) {
             done={track2Active === false ? false : di >= i}
             current={track2Active && di === i}
             dormant={!track2Active}
+            date={dates?.[stop.key]}
           />
         ))}
       </div>
@@ -83,7 +85,7 @@ export function TrackProgress({ referral }: { referral: Referral }) {
 }
 
 function Stop({
-  label, tone, done, current, first, dormant, faded,
+  label, tone, done, current, first, dormant, faded, date,
 }: {
   label: string;
   tone: "appt" | "docs";
@@ -92,6 +94,7 @@ function Stop({
   first?: boolean;
   dormant?: boolean;
   faded?: boolean;
+  date?: string;
 }) {
   const color = tone === "appt" ? "appt" : "docs";
   const nodeClass = dormant || faded
@@ -114,6 +117,13 @@ function Stop({
       <span className={`mt-1.5 text-center text-[11px] leading-tight ${dormant || faded ? "text-muted" : current ? `text-${color} font-semibold` : done ? "text-ink" : "text-muted"}`}>
         {label}
       </span>
+      {date && (done || current) && !dormant && !faded && (
+        <span className="mt-0.5 text-center text-[10px] leading-tight text-muted">
+          {new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+          {" · "}
+          {new Date(date).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+        </span>
+      )}
     </div>
   );
 }

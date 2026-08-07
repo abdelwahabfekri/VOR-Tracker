@@ -7,6 +7,9 @@ import { CAPS } from "@/lib/statusEngine";
 import { DetailActions } from "@/components/DetailActions";
 import { DeleteReferral } from "@/components/DeleteReferral";
 import { ScanHistory } from "@/components/ScanHistory";
+import { CallLogTable } from "@/components/CallLogTable";
+import { InboundCallPanel } from "@/components/InboundCallPanel";
+import { firstReachedMap } from "@/lib/callLog";
 
 export default async function ReferralDetail({ params }: { params: { code: string } }) {
   const me = await getMe();
@@ -17,6 +20,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
   const history = await getHistory(referral.id);
   const isAdmin = me.role === "admin";
   const dormant = referral.document_state === "awaiting_appointment";
+  const checkpointDates = firstReachedMap(history);
 
   return (
     <div>
@@ -43,13 +47,14 @@ export default async function ReferralDetail({ params }: { params: { code: strin
       {/* Journey */}
       <Card className="mt-6 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Journey</h2>
-        <TrackProgress referral={referral} />
+        <TrackProgress referral={referral} dates={checkpointDates} />
       </Card>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* Left: details + actions */}
         <div className="space-y-6 lg:col-span-2">
           {isAdmin && <DetailActions referral={referral} />}
+          {isAdmin && <InboundCallPanel referral={referral} />}
 
           {/* Specialist reference (destination) */}
           <Card className="p-5">
@@ -96,6 +101,12 @@ export default async function ReferralDetail({ params }: { params: { code: strin
           </Card>
         </div>
       </div>
+
+      {/* Call log — full width at the bottom */}
+      <Card className="mt-6 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Call log</h2>
+        <CallLogTable entries={history} />
+      </Card>
     </div>
   );
 }

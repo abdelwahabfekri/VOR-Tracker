@@ -59,7 +59,8 @@ export async function createReferral(form: {
 // ---------------------------------------------------------------------------
 export async function performAction(
   referralId: string,
-  action: Action
+  action: Action,
+  direction: "outbound" | "inbound" = "outbound"
 ): Promise<{ ok: boolean; error?: string; flag?: string }> {
   const supabase = createClient();
 
@@ -85,12 +86,15 @@ export async function performAction(
   const { error: updErr } = await supabase.from("referrals").update(fields).eq("id", referralId);
   if (updErr) return { ok: false, error: updErr.message };
 
+  const noteCode =
+    direction === "inbound" && log.note_code ? `inbound_${log.note_code}` : log.note_code;
+
   const { error: logErr } = await supabase.from("status_history").insert({
     referral_id: referralId,
     track: log.track,
     from_state: log.from,
     to_state: log.to,
-    note_code: log.note_code,
+    note_code: noteCode,
     changed_by: user.id,
   });
   if (logErr) return { ok: false, error: logErr.message };
