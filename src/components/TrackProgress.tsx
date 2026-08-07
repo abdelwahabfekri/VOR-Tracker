@@ -8,7 +8,7 @@ const APPT_STOPS: { key: AppointmentStatus; label: string }[] = [
   { key: "referral_created", label: "Created" },
   { key: "patient_contacted", label: "Contacting" },
   { key: "appointment_scheduled", label: "Scheduled" },
-  { key: "appointment_confirmed", label: "Confirmed" },
+  { key: "appointment_confirmed", label: "Attendance confirmed" },
   { key: "appointment_completed", label: "Visit done" },
 ];
 const DOC_STOPS: { key: DocumentStatus; label: string }[] = [
@@ -26,6 +26,7 @@ function stateIndex(r: Referral) {
   let ai = APPT_ORDER.indexOf(r.appointment_state);
   if (r.appointment_state === "appointment_rescheduled") ai = APPT_ORDER.indexOf("appointment_scheduled");
   if (r.appointment_state === "patient_not_replying") ai = APPT_ORDER.indexOf("patient_contacted");
+  if (r.appointment_state === "awaiting_booking") ai = APPT_ORDER.indexOf("patient_contacted");
   const di = DOC_ORDER.indexOf(r.document_state);
   return { ai, di };
 }
@@ -57,7 +58,7 @@ export function TrackProgress({ referral, dates }: { referral: Referral; dates?:
         })}
         {/* Handoff marker */}
         <div className="flex flex-col items-center px-1 pt-3">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-docs">Return leg</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-docs">Then: Records</div>
           <div className="text-docs">▸</div>
         </div>
         {/* Track 2 */}

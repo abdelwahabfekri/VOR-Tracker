@@ -22,6 +22,7 @@ create extension if not exists "pgcrypto";   -- gen_random_uuid()
 create type appointment_status as enum (
   'referral_created',
   'patient_contacted',
+  'awaiting_booking',           -- reached patient; they'll book and call back
   'appointment_scheduled',
   'appointment_confirmed',
   'appointment_completed',
@@ -242,7 +243,7 @@ select
   ) as awaiting_patient_response,
 
   count(*) filter (
-    where appointment_state in ('referral_created','patient_contacted','appointment_rescheduled')
+    where appointment_state in ('referral_created','patient_contacted','awaiting_booking','appointment_rescheduled')
   ) as awaiting_scheduling,
 
   count(*) filter (

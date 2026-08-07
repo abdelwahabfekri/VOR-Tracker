@@ -6,6 +6,7 @@
 export type AppointmentStatus =
   | "referral_created"
   | "patient_contacted"
+  | "awaiting_booking"
   | "appointment_scheduled"
   | "appointment_confirmed"
   | "appointment_completed"
@@ -81,6 +82,7 @@ export interface AppUser {
 export const APPT_LABEL: Record<AppointmentStatus, string> = {
   referral_created:        "Referral created",
   patient_contacted:       "Contacting patient",
+  awaiting_booking:        "Awaiting booking",
   appointment_scheduled:   "Appointment scheduled",
   appointment_confirmed:   "Appointment confirmed",
   appointment_completed:   "Visit completed",
@@ -105,6 +107,7 @@ export type Intent = "appt" | "docs" | "overdue" | "soon" | "done" | "muted";
 export const APPT_INTENT: Record<AppointmentStatus, Intent> = {
   referral_created: "appt",
   patient_contacted: "appt",
+  awaiting_booking: "appt",
   appointment_scheduled: "appt",
   appointment_confirmed: "appt",
   appointment_completed: "done",

@@ -28,6 +28,7 @@ export const CAPS = { contact: 5, reschedule: 3, document: 3 } as const;
 export type Action =
   // Track 1
   | { kind: "log_no_answer" }          // failed contact attempt (scheduling phase)
+  | { kind: "awaiting_booking" }       // reached patient — they'll book and call back
   | { kind: "book_appointment"; slot: string }
   | { kind: "confirm_attendance"; slot?: string }   // pre-call: confirm; optionally correct the slot
   | { kind: "precall_no_answer" }      // pre-call: couldn't reach -> status held
@@ -102,6 +103,17 @@ export function applyAction(r: Referral, action: Action): TransitionResult {
         next_action_due: iso(now + 3 * DAY), // every 3 days
         last_action_at: nowIso,
         log: { track: "appointment", from: a, to: "patient_contacted", note_code: "no_answer" },
+      };
+    }
+
+    case "awaiting_booking": {
+      // Patient answered and will book — a real contact, so it does NOT
+      // count against the no-answer cap (contact_attempts unchanged).
+      return {
+        appointment_state: "awaiting_booking",
+        next_action_due: iso(now + 3 * DAY),
+        last_action_at: nowIso,
+        log: { track: "appointment", from: a, to: "awaiting_booking", note_code: "awaiting_booking" },
       };
     }
 
@@ -278,6 +290,7 @@ export function nextActionLabel(r: Referral): string {
 
   if (a === "patient_not_replying") return "Review — unreachable patient";
   if (a === "referral_created" || a === "patient_contacted") return "Call patient to schedule";
+  if (a === "awaiting_booking") return "Follow up — patient will book";
   if (a === "appointment_scheduled") return "Pre-appointment confirmation call";
   if (a === "appointment_confirmed") return "Post-visit check";
   if (a === "appointment_rescheduled") return "Confirm new appointment";

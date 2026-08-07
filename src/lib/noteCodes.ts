@@ -4,6 +4,7 @@ export const NOTE_LABEL: Record<string, string> = {
   created: "Referral created",
   no_answer: "No answer — VM left",
   no_answer_cap: "No answer — max attempts reached, parked",
+  awaiting_booking: "Patient will book — awaiting date",
   booked: "Appointment booked",
   confirmed: "Attendance confirmed (pre-call)",
   precall_no_answer: "Pre-call: no answer — VM left",

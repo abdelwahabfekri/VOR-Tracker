@@ -25,10 +25,11 @@ export function QuickActions({
   const danger = `${btn} border border-overdue/30 text-overdue hover:bg-overdue-soft`;
 
   // Track 1 — scheduling phase
-  if (a === "referral_created" || a === "patient_contacted") {
+  if (a === "referral_created" || a === "patient_contacted" || a === "awaiting_booking") {
     return (
       <div className="flex flex-wrap items-center gap-2">
         <button className={primary} disabled={disabled} onClick={() => setSlotOpen("book")}>Booked</button>
+        <button className={ghost} disabled={disabled} onClick={() => onAction({ kind: "awaiting_booking" })}>Awaiting booking</button>
         <button className={ghost} disabled={disabled} onClick={() => onAction({ kind: "log_no_answer" })}>No answer</button>
         <button className={danger} disabled={disabled} onClick={() => onAction({ kind: "patient_declined" })}>Declined</button>
         {slotOpen === "book" && (

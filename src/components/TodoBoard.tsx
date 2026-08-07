@@ -127,7 +127,7 @@ function Section({
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted">
                   <span>Due {fmtDue(r.next_action_due)}</span>
-                  {(r.appointment_state === "referral_created" || r.appointment_state === "patient_contacted") && (
+                  {(r.appointment_state === "referral_created" || r.appointment_state === "patient_contacted" || r.appointment_state === "awaiting_booking") && (
                     <AttemptBadge n={r.contact_attempts} cap={CAPS.contact} label="Contact attempts" />
                   )}
                   {r.document_state === "documents_requested" && (

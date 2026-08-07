@@ -21,6 +21,11 @@ export default async function ReferralDetail({ params }: { params: { code: strin
   const isAdmin = me.role === "admin";
   const dormant = referral.document_state === "awaiting_appointment";
   const checkpointDates = firstReachedMap(history);
+  // "Visit done" should show the actual visit date (locked in at confirmation),
+  // not the moment the admin logged completion — those can differ by a day or more.
+  if (referral.appointment_slot) {
+    checkpointDates["appointment_completed"] = referral.appointment_slot;
+  }
 
   return (
     <div>

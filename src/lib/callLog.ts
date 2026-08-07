@@ -21,6 +21,7 @@ export interface CallLogRow {
 const CALL_CODES = new Set([
   "no_answer",
   "no_answer_cap",
+  "awaiting_booking",
   "booked",
   "confirmed",
   "precall_no_answer",
@@ -38,6 +39,7 @@ function purposeFromState(fromState: string | null, track: string): string {
   switch (fromState as AppointmentStatus | null) {
     case "referral_created":
     case "patient_contacted":
+    case "awaiting_booking":
       return "Scheduling call";
     case "appointment_scheduled":
     case "appointment_rescheduled":
@@ -54,6 +56,7 @@ function purposeFromState(fromState: string | null, track: string): string {
 const OUTCOME: Record<string, string> = {
   no_answer: "No answer (VM left)",
   no_answer_cap: "No answer — max attempts, parked",
+  awaiting_booking: "Reached patient — will book and call back",
   booked: "Appointment booked",
   confirmed: "Attendance confirmed",
   precall_no_answer: "No answer (VM left)",
