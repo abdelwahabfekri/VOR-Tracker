@@ -289,9 +289,13 @@ alter table referring_providers  enable row level security;
 alter table app_users            enable row level security;
 
 -- Helper: current user's app_users row
+-- security definer + fixed search_path: these helpers query app_users, which
+-- itself has RLS policies that call is_admin() — without bypassing RLS here,
+-- evaluating the policy re-triggers the policy and Postgres blows its stack
+-- ("stack depth limit exceeded") on effectively every read/write.
 create or replace function current_app_user()
 returns app_users
-language sql stable
+language sql stable security definer set search_path = public
 as $$
   select * from app_users where id = auth.uid();
 $$;
@@ -299,7 +303,7 @@ $$;
 -- Helper: is current user an admin?
 create or replace function is_admin()
 returns boolean
-language sql stable
+language sql stable security definer set search_path = public
 as $$
   select coalesce((select role = 'admin' from app_users where id = auth.uid()), false);
 $$;
