@@ -308,6 +308,25 @@ as $$
   select coalesce((select role = 'admin' from app_users where id = auth.uid()), false);
 $$;
 
+-- Helper: can the current (viewer) user see referrals for this provider?
+-- Also security definer — any function queried from inside a policy on
+-- referrals must bypass app_users' own RLS, or it recurses the same way.
+create or replace function can_view_provider(p_provider_id uuid)
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from app_users u
+    where u.id = auth.uid()
+      and u.role = 'viewer'
+      and u.active
+      and (
+        u.scope = 'all'
+        or (u.scope = 'own' and u.provider_id = p_provider_id)
+      )
+  );
+$$;
+
 -- ---- referrals ----
 -- Admin: full read/write.
 create policy referrals_admin_all
@@ -318,18 +337,7 @@ create policy referrals_admin_all
 -- Viewer: read-only. scope='all' sees everything; scope='own' sees only theirs.
 create policy referrals_viewer_select
   on referrals for select
-  using (
-    exists (
-      select 1 from app_users u
-      where u.id = auth.uid()
-        and u.role = 'viewer'
-        and u.active
-        and (
-          u.scope = 'all'
-          or (u.scope = 'own' and u.provider_id = referrals.referring_provider_id)
-        )
-    )
-  );
+  using (can_view_provider(referring_provider_id));
 
 -- ---- status_history ----
 create policy history_admin_all
