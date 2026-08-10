@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ReferringProvider } from "@/lib/types";
 import { createReferral } from "@/lib/actions";
 import { Card, CodeChip } from "@/components/ui";
+import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 export function NewReferralForm({ providers }: { providers: ReferringProvider[] }) {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
     specialty: "",
     specialist_phone: "",
     specialist_fax: "",
+    referral_date: isoToNyInput(new Date().toISOString()),
   });
 
   function set<K extends keyof typeof form>(k: K, v: string) {
@@ -28,7 +30,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const res = await createReferral(form);
+      const res = await createReferral({ ...form, referral_date: nyInputToIso(form.referral_date) });
       if (!res.ok) { setError(res.error ?? "Could not create referral."); return; }
       setCreated(res.code ?? null);
     });
@@ -48,7 +50,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
         </div>
         <div className="mt-6 flex justify-center gap-3">
           <button
-            onClick={() => { setCreated(null); setForm({ ...form, specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "" }); }}
+            onClick={() => { setCreated(null); setForm({ ...form, specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()) }); }}
             className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-navy hover:border-star"
           >
             Add another
@@ -79,6 +81,19 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-ink">
+            Referral opened <span className="text-muted">(Eastern Time)</span>
+          </label>
+          <input
+            type="datetime-local"
+            value={form.referral_date}
+            onChange={(e) => set("referral_date", e.target.value)}
+            className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
+            required
+          />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
