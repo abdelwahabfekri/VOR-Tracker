@@ -14,11 +14,14 @@ export async function createReferral(form: {
   specialty?: string;
   specialist_phone?: string;
   specialist_fax?: string;
+  referral_date?: string;
 }): Promise<{ ok: boolean; code?: string; error?: string }> {
   const supabase = createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not signed in." };
+
+  const referralDate = form.referral_date ?? new Date().toISOString();
 
   const { data, error } = await supabase
     .from("referrals")
@@ -30,8 +33,9 @@ export async function createReferral(form: {
       specialist_fax: form.specialist_fax || null,
       appointment_state: "referral_created",
       document_state: "awaiting_appointment",
-      next_action_due: initialDue(),
-      last_action_at: new Date().toISOString(),
+      referral_date: referralDate,
+      next_action_due: initialDue(new Date(referralDate)),
+      last_action_at: referralDate,
     })
     .select("id, code")
     .single();
@@ -46,6 +50,7 @@ export async function createReferral(form: {
     to_state: "referral_created",
     note_code: "created",
     changed_by: user.id,
+    changed_at: referralDate,
   });
 
   revalidatePath("/tracking");
