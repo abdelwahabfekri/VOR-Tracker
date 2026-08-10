@@ -30,34 +30,54 @@ export function TopNav({
 
   return (
     <header className="sticky top-0 z-40 rounded-b-2xl bg-navy-900 text-white shadow-pop">
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 md:px-8">
-        {/* Left: nav links */}
-        <nav className="flex items-center gap-1 overflow-x-auto">
-          {links.map((l) => {
-            const active = path === l.href || path.startsWith(l.href + "/");
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-medium transition sm:px-3 ${
-                  active ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <span className="text-lg leading-none text-star-400">{l.icon}</span>
-                <span className="hidden sm:inline">{l.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+      <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-3 px-4 py-4 md:px-8">
+        {/* Left: logo + nav links */}
+        <div className="flex items-center gap-4">
+          <Link href="/tracking" className="flex shrink-0 items-center">
+            <Image src="/logo-white.png" alt="Aizer" width={92} height={26} priority />
+          </Link>
 
-        {/* Center: logo */}
-        <Link href="/tracking" className="flex flex-col items-center justify-self-center">
-          <Image src="/logo-white.png" alt="Aizer" width={108} height={30} priority />
-          <span className="mt-1 text-[11px] font-normal text-white/60">Vision Department</span>
-        </Link>
+          <nav className="flex items-center gap-1 overflow-x-auto">
+            {links.map((l) => {
+              const active = path === l.href || path.startsWith(l.href + "/");
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-medium transition sm:px-3 ${
+                    active ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <span className="text-lg leading-none text-star-400">{l.icon}</span>
+                  <span className="hidden sm:inline">{l.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-        {/* Right: new referral (admin) + user */}
-        <div className="flex items-center justify-end gap-2 sm:gap-3">
+        {/* Center: search */}
+        <div className="order-last w-full sm:order-none sm:ml-2 sm:max-w-xs sm:flex-1">
+          <label className="flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-white/70 transition focus-within:bg-white/15">
+            <span className="text-sm leading-none">⌕</span>
+            <input
+              type="search"
+              placeholder="Search…"
+              className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
+            />
+          </label>
+        </div>
+
+        {/* Right: notifications + new referral (admin) + user */}
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            title="Notifications"
+            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <span className="text-base leading-none">🔔</span>
+          </button>
+
           {isAdmin && (
             <Link
               href="/new"
