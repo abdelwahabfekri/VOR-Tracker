@@ -15,7 +15,7 @@ export function QuickActions({
   onAction: (a: Action) => void;
   disabled?: boolean;
 }) {
-  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule" | "confirm">(null);
+  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule">(null);
   const a = referral.appointment_state;
   const d = referral.document_state;
 
@@ -44,18 +44,10 @@ export function QuickActions({
   if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => setSlotOpen("confirm")}>Confirmed</button>
+        <button className={primary} disabled={disabled} onClick={() => onAction({ kind: "confirm_attendance" })}>Confirmed</button>
         <button className={ghost} disabled={disabled} onClick={() => onAction({ kind: "precall_no_answer" })}>No answer</button>
         <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("reschedule")}>Reschedule</button>
 
-        {slotOpen === "confirm" && (
-          <SlotPrompt
-            initial={referral.appointment_slot ?? ""}
-            confirmLabel="Confirm"
-            onPick={(slot) => { onAction({ kind: "confirm_attendance", slot }); setSlotOpen(null); }}
-            onCancel={() => setSlotOpen(null)}
-          />
-        )}
         {slotOpen === "reschedule" && (
           <SlotPrompt
             onPick={(slot) => { onAction({ kind: "reschedule", slot }); setSlotOpen(null); }}
