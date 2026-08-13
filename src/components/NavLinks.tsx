@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { signOut } from "@/lib/actions";
 
 export function TopNav({
@@ -15,6 +16,15 @@ export function TopNav({
   userRole: string;
 }) {
   const path = usePathname();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const code = query.trim();
+    if (!code) return;
+    router.push(`/tracking/${code.toUpperCase()}`);
+  }
   const links = [
     ...(isAdmin ? [{ href: "/todo", label: "To-Do", icon: "◔" }] : []),
     { href: "/tracking", label: "Tracking", icon: "◈" },
@@ -57,16 +67,18 @@ export function TopNav({
         </div>
 
         {/* Center: search */}
-        <div className="order-last w-full sm:order-none sm:ml-2 sm:max-w-xs sm:flex-1">
+        <form onSubmit={submitSearch} className="order-last w-full sm:order-none sm:ml-2 sm:max-w-xs sm:flex-1">
           <label className="flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-white/70 transition focus-within:bg-white/15">
             <span className="text-sm leading-none">⌕</span>
             <input
               type="search"
-              placeholder="Search…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Jump to tracking code…"
               className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
             />
           </label>
-        </div>
+        </form>
 
         {/* Right: notifications + new referral (admin) + user */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">

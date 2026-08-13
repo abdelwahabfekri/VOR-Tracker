@@ -19,7 +19,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
     specialty: "",
     specialist_phone: "",
     specialist_fax: "",
-    referral_date: isoToNyInput(new Date().toISOString()),
+    referral_date: isoToNyInput(new Date().toISOString()).slice(0, 10),
   });
 
   function set<K extends keyof typeof form>(k: K, v: string) {
@@ -50,7 +50,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
         </div>
         <div className="mt-6 flex justify-center gap-3">
           <button
-            onClick={() => { setCreated(null); setForm({ ...form, specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()) }); }}
+            onClick={() => { setCreated(null); setForm({ ...form, specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()).slice(0, 10) }); }}
             className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-navy hover:border-star"
           >
             Add another
@@ -88,7 +88,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
             Referral opened <span className="text-muted">(Eastern Time)</span>
           </label>
           <input
-            type="datetime-local"
+            type="date"
             value={form.referral_date}
             onChange={(e) => set("referral_date", e.target.value)}
             className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
