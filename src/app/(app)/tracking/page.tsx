@@ -5,12 +5,13 @@ import { TrackingTable } from "@/components/TrackingTable";
 export default async function TrackingPage({
   searchParams,
 }: {
-  searchParams: { provider?: string };
+  searchParams: { provider?: string; status?: string };
 }) {
   const me = await getMe();
   if (!me) redirect("/login");
 
   const providerId = searchParams.provider || undefined;
+  const activeStatus = searchParams.status === "closed" ? "closed" : "active";
   const [referrals, providers] = await Promise.all([
     getReferrals(providerId),
     getProviders(),
@@ -24,7 +25,12 @@ export default async function TrackingPage({
           Every referral and where it stands. Select a row to see its full journey.
         </p>
       </header>
-      <TrackingTable referrals={referrals} providers={providers} activeProvider={providerId} />
+      <TrackingTable
+        referrals={referrals}
+        providers={providers}
+        activeProvider={providerId}
+        activeStatus={activeStatus}
+      />
     </div>
   );
 }

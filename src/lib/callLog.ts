@@ -15,6 +15,7 @@ export interface CallLogRow {
   direction: CallDirection;
   purpose: string;   // why the contact happened
   outcome: string;   // what resulted
+  note_text: string | null;
 }
 
 // note_codes that represent an actual phone contact (vs. a system/state event)
@@ -83,6 +84,7 @@ export function toCallLog(entries: StatusHistoryEntry[]): CallLogRow[] {
         direction: (inbound ? "inbound" : "outbound") as CallDirection,
         purpose: purposeFromState(e.from_state, e.track),
         outcome: OUTCOME[base] ?? base,
+        note_text: e.note_text,
       } as CallLogRow;
     })
     .filter((x): x is CallLogRow => x !== null)

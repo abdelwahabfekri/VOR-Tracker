@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Referral } from "@/lib/types";
+import { isActive } from "@/lib/types";
 import type { Action } from "@/lib/statusEngine";
 import { performAction } from "@/lib/actions";
 import { QuickActions } from "@/components/QuickActions";
@@ -16,16 +17,11 @@ export function InboundCallPanel({ referral }: { referral: Referral }) {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
-  const closed =
-    referral.document_state === "closed" ||
-    ["patient_declined", "cancelled"].includes(referral.appointment_state) ||
-    referral.document_state === "documents_unavailable";
+  if (!isActive(referral)) return null;
 
-  if (closed) return null;
-
-  function run(action: Action) {
+  function run(action: Action, note?: string) {
     startTransition(async () => {
-      const res = await performAction(referral.id, action, "inbound");
+      const res = await performAction(referral.id, action, "inbound", note);
       setMsg(res.ok ? "Incoming call logged." : res.error ?? "Error");
       router.refresh();
       setOpen(false);

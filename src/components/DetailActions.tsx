@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Referral } from "@/lib/types";
+import { isActive } from "@/lib/types";
 import { performAction } from "@/lib/actions";
 import { nextActionLabel } from "@/lib/statusEngine";
 import { QuickActions } from "@/components/QuickActions";
@@ -14,14 +15,11 @@ export function DetailActions({ referral }: { referral: Referral }) {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
-  const closed =
-    referral.document_state === "closed" ||
-    ["patient_declined", "cancelled"].includes(referral.appointment_state) ||
-    referral.document_state === "documents_unavailable";
+  const closed = !isActive(referral);
 
-  function run(action: Action) {
+  function run(action: Action, note?: string) {
     startTransition(async () => {
-      const res = await performAction(referral.id, action);
+      const res = await performAction(referral.id, action, "outbound", note);
       setMsg(res.ok ? "Logged." : res.error ?? "Error");
       router.refresh();
       setTimeout(() => setMsg(null), 2500);

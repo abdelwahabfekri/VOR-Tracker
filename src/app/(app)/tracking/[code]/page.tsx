@@ -8,6 +8,7 @@ import { DetailActions } from "@/components/DetailActions";
 import { DeleteReferral } from "@/components/DeleteReferral";
 import { ScanHistory } from "@/components/ScanHistory";
 import { CallLogTable } from "@/components/CallLogTable";
+import { NotesSection } from "@/components/NotesSection";
 import { InboundCallPanel } from "@/components/InboundCallPanel";
 import { firstReachedMap } from "@/lib/callLog";
 import { fmtDateTime } from "@/lib/tz";
@@ -112,6 +113,11 @@ export default async function ReferralDetail({ params }: { params: { code: strin
       <Card className="mt-6 p-5">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Call log</h2>
         <CallLogTable entries={history} />
+      </Card>
+
+      <Card className="mt-6 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Notes</h2>
+        <NotesSection entries={history} />
       </Card>
     </div>
   );

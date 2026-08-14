@@ -14,7 +14,7 @@ import {
 } from "@/lib/types";
 
 // ---- Status chip -----------------------------------------------------------
-const INTENT_CLASS: Record<Intent, string> = {
+export const INTENT_CLASS: Record<Intent, string> = {
   appt: "bg-appt-soft text-appt",
   docs: "bg-docs-soft text-docs",
   overdue: "bg-overdue-soft text-overdue",

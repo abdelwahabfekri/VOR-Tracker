@@ -47,16 +47,8 @@ export async function getHistory(referralId: string): Promise<StatusHistoryEntry
   return (data as StatusHistoryEntry[]) ?? [];
 }
 
-export async function getDashboard() {
+export async function getDashboard(): Promise<{ referrals: Referral[] }> {
   const supabase = createClient();
-  const [{ data: summary }, { data: providerStats }, { data: referrals }] = await Promise.all([
-    supabase.from("v_dashboard_summary").select("*").single(),
-    supabase.from("v_provider_stats").select("*"),
-    supabase.from("v_referral_enriched").select("*"),
-  ]);
-  return {
-    summary: summary ?? null,
-    providerStats: providerStats ?? [],
-    referrals: (referrals as Referral[]) ?? [],
-  };
+  const { data } = await supabase.from("v_referral_enriched").select("*");
+  return { referrals: (data as Referral[]) ?? [] };
 }

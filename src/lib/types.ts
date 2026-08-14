@@ -64,6 +64,7 @@ export interface StatusHistoryEntry {
   from_state: string | null;
   to_state: string;
   note_code: string | null;
+  note_text: string | null;
   changed_by: string | null;
   changed_at: string;
 }
@@ -130,9 +131,35 @@ export const DOC_INTENT: Record<DocumentStatus, Intent> = {
 export const TERMINAL_APPT: AppointmentStatus[] = ["patient_declined", "cancelled"];
 export const TERMINAL_DOC: DocumentStatus[] = ["documents_unavailable", "closed"];
 
-export function isReferralClosed(r: Referral): boolean {
-  return (
-    r.document_state === "closed" ||
-    TERMINAL_APPT.includes(r.appointment_state)
-  );
+// ---- Active vs Closed — single source of truth ----------------------------
+export type ClosedKind = "completed" | "incomplete" | "declined" | "cancelled" | null;
+
+export function closedKind(r: Referral): ClosedKind {
+  if (r.document_state === "closed") return "completed";
+  if (r.document_state === "documents_unavailable") return "incomplete";
+  if (r.appointment_state === "patient_declined") return "declined";
+  if (r.appointment_state === "cancelled") return "cancelled";
+  return null;
 }
+
+export function isActive(r: Referral): boolean {
+  return closedKind(r) === null;
+}
+
+export function isReferralClosed(r: Referral): boolean {
+  return closedKind(r) !== null;
+}
+
+export const CLOSED_KIND_LABEL: Record<Exclude<ClosedKind, null>, string> = {
+  completed: "Completed",
+  incomplete: "Incomplete",
+  declined: "Declined",
+  cancelled: "Cancelled",
+};
+
+export const CLOSED_KIND_INTENT: Record<Exclude<ClosedKind, null>, Intent> = {
+  completed: "done",
+  incomplete: "overdue",
+  declined: "muted",
+  cancelled: "muted",
+};

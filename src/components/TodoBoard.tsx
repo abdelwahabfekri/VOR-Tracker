@@ -41,9 +41,9 @@ export function TodoBoard({
   const soon = actionable.filter((x) => x.u === "soon");
   const upcoming = actionable.filter((x) => x.u === "scheduled");
 
-  function run(referralId: string, action: Parameters<typeof performAction>[1]) {
+  function run(referralId: string, action: Parameters<typeof performAction>[1], note?: string) {
     startTransition(async () => {
-      const res = await performAction(referralId, action);
+      const res = await performAction(referralId, action, "outbound", note);
       if (!res.ok) { setToast(res.error ?? "Something went wrong."); return; }
       if (res.flag === "reschedule_cap_review") setToast("Reschedule limit reached — flagged for review.");
       else if (res.flag === "parked_not_replying") setToast("Moved to ‘Unable to reach patient’.");
@@ -100,7 +100,7 @@ function Section({
 }: {
   title: string;
   items: { r: Referral }[];
-  run: (id: string, a: Parameters<typeof performAction>[1]) => void;
+  run: (id: string, a: Parameters<typeof performAction>[1], note?: string) => void;
   pending: boolean;
   tone: "overdue" | "soon" | "muted";
 }) {
@@ -138,7 +138,7 @@ function Section({
               </div>
 
               <div className="flex items-center gap-2">
-                <QuickActions referral={r} onAction={(a) => run(r.id, a)} disabled={pending} />
+                <QuickActions referral={r} onAction={(a, note) => run(r.id, a, note)} disabled={pending} />
                 <Link
                   href={`/tracking/${r.code}`}
                   className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-navy hover:border-star"
