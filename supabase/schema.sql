@@ -138,6 +138,7 @@ create table status_history (
   from_state     text,                         -- null on first entry
   to_state       text not null,
   note_code      text,                         -- structured reason code, NON-PHI (e.g. 'no_answer')
+  note_text      text,                         -- optional admin free-text note (never PHI — enforced by policy, not schema)
   changed_by     uuid references app_users(id),
   changed_at     timestamptz not null default now()
 );

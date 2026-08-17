@@ -65,7 +65,8 @@ export async function createReferral(form: {
 export async function performAction(
   referralId: string,
   action: Action,
-  direction: "outbound" | "inbound" = "outbound"
+  direction: "outbound" | "inbound" = "outbound",
+  note?: string
 ): Promise<{ ok: boolean; error?: string; flag?: string }> {
   const supabase = createClient();
 
@@ -100,6 +101,7 @@ export async function performAction(
     from_state: log.from,
     to_state: log.to,
     note_code: noteCode,
+    note_text: note?.trim() || null,
     changed_by: user.id,
   });
   if (logErr) return { ok: false, error: logErr.message };

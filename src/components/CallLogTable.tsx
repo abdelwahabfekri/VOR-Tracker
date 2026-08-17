@@ -17,7 +17,8 @@ export function CallLogTable({ entries }: { entries: StatusHistoryEntry[] }) {
             <th className="py-2 pr-3 font-semibold">Track</th>
             <th className="py-2 pr-3 font-semibold">Direction</th>
             <th className="py-2 pr-3 font-semibold">Purpose</th>
-            <th className="py-2 font-semibold">Outcome</th>
+            <th className="py-2 pr-3 font-semibold">Outcome</th>
+            <th className="py-2 font-semibold">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -40,7 +41,8 @@ export function CallLogTable({ entries }: { entries: StatusHistoryEntry[] }) {
                 </span>
               </td>
               <td className="py-2.5 pr-3 text-ink">{r.purpose}</td>
-              <td className="py-2.5 text-muted">{r.outcome}</td>
+              <td className="py-2.5 pr-3 text-muted">{r.outcome}</td>
+              <td className="py-2.5 text-muted">{r.note_text || "—"}</td>
             </tr>
           ))}
         </tbody>
