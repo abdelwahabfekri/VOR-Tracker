@@ -69,3 +69,6 @@ from referrals r where r.code like 'VOR-999%' and r.completed_at is not null;
 insert into status_history (referral_id, track, from_state, to_state, note_code, changed_at)
 select r.id, 'document', 'documents_uploaded', 'closed', 'closed', r.closed_at
 from referrals r where r.code like 'VOR-999%' and r.document_state = 'closed' and r.closed_at is not null;
+
+-- Fake MRNs (leading zeros on purpose — they must survive storage).
+update referrals set mrn = '000' || right(code, 5) where code like 'VOR-999%';

@@ -3,12 +3,12 @@
 Operational tracking for the Aizer **Department of Vision** referral process.
 Built with Next.js (App Router) + Supabase, deploys on Vercel.
 
-> **Privacy boundary — do not cross.** This application stores only an opaque
-> tracking code (`VOR-#######`) and operational status. It holds **no**
-> patient-identifiable information: no names, MRNs, dates of birth, phone
-> numbers, addresses, or clinical notes. The code↔patient link lives **only**
-> in the secured in-domain Excel sheet. "Provider" and "specialist" fields are
-> business contacts, not patient data.
+> **Privacy boundary — do not cross.** The only patient identifier this
+> application stores is the **MRN**, alongside a tracking code (`VOR-#######`)
+> and operational status. It holds **no** names, dates of birth, phone numbers,
+> addresses, or clinical notes. Because MRN is PHI, every read goes through
+> row-level security. "Provider" and "specialist" fields are business
+> contacts, not patient data.
 
 ---
 
@@ -18,7 +18,7 @@ Built with Next.js (App Router) + Supabase, deploys on Vercel.
 - **Tracking** — every referral as a row with dual-track status (appointment + documents); the documents track stays greyed as *Awaiting appointment* until the visit is completed. Click a row for the full journey.
 - **Referral detail** — a shipping-style progress tracker, specialist reference (phone/fax), attempt counters, and a timestamped "tracking history" of every status change.
 - **Dashboard** — stat cards then charts (provider volume, status mix, aging).
-- **New referral** (admin) — generates the `VOR-` code to copy into the Excel sheet.
+- **New referral** (admin) — records the patient MRN and generates the `VOR-` tracking code.
 - **Roles** — `admin` (you: full control) and `viewer` (providers: read-only).
 
 ---
@@ -130,5 +130,5 @@ status), per the agreed design. Every status change writes an immutable row to
 This project pins `next@14.2.x`. Next.js has since published further security
 patches in the 15.x line. When you have capacity, plan an upgrade to the latest
 Next.js 15 (note the async `cookies()`/`headers()` API changes) and run
-`npm audit` as part of that work. The app is auth-gated and stores no PHI, which
-limits exposure in the meantime.
+`npm audit` as part of that work. The app stores patient MRNs (PHI), so treat this
+upgrade as a priority.

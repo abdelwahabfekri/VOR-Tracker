@@ -4,11 +4,11 @@
 -- Owner: Abdelwahab Fekri (admin)
 --
 -- PRIVACY BOUNDARY (do not violate):
---   This database stores ONLY an opaque referral code (VOR-#######) and
---   operational status. It holds NO patient-identifiable information:
---   no names, MRNs, DOBs, phone numbers, addresses, or clinical notes.
---   The code<->patient mapping lives ONLY in the secured in-domain Excel
---   sheet. "Provider" and "specialist" names below are NOT patient data.
+--   The only patient identifier stored is the MRN (referrals.mrn). Beyond
+--   that the database holds a referral code (VOR-#######) and operational
+--   status — no names, DOBs, phone numbers, addresses, or clinical notes.
+--   Because MRN is PHI, every read path must go through RLS (see section 9).
+--   "Provider" and "specialist" names below are NOT patient data.
 -- ============================================================================
 
 -- Extensions -----------------------------------------------------------------
@@ -85,8 +85,14 @@ create table app_users (
 create table referrals (
   id                    uuid primary key default gen_random_uuid(),
 
-  -- Opaque identifier shown in UI and copied into the Excel mapping sheet.
+  -- Tracking identifier shown in the UI.
   code                  text not null unique,            -- 'VOR-4820193'
+
+  -- Patient MRN (PHI). Text, never numeric, so leading zeros survive.
+  -- Not unique: one patient can have several referrals.
+  -- Nullable until pre-MRN referrals are backfilled; the app requires it on create.
+  mrn                   text
+    constraint mrn_format check (mrn = btrim(mrn) and char_length(mrn) between 1 and 32),
 
   -- Directory info (NON-PHI)
   referring_provider_id uuid not null references referring_providers(id),
@@ -121,6 +127,7 @@ create table referrals (
 );
 
 create index idx_referrals_code            on referrals (code);
+create index idx_referrals_mrn             on referrals (mrn);
 create index idx_referrals_provider        on referrals (referring_provider_id);
 create index idx_referrals_appt_state      on referrals (appointment_state);
 create index idx_referrals_doc_state       on referrals (document_state);
@@ -202,7 +209,7 @@ create trigger trg_referrals_touch
   for each row execute function touch_updated_at();
 
 -- ============================================================================
--- 8. ANALYTICS VIEWS  (all PHI-free)
+-- 8. ANALYTICS VIEWS  (v_referral_enriched exposes mrn — RLS-guarded)
 --   security_invoker = on: views run with the caller's privileges so the RLS
 --   policies on referrals/status_history apply. Without it a view runs as its
 --   owner (postgres), bypassing RLS — scope='own' viewers and even the anon
