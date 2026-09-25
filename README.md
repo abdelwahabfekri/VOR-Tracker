@@ -29,6 +29,7 @@ Built with Next.js (App Router) + Supabase, deploys on Vercel.
 2. Open the **SQL Editor** and run, in order:
    - `supabase/schema.sql`  (tables, enums, code generator, analytics views, row-level security, and the six seeded providers)
    - `supabase/seed.sql`    (optional — 5 test referrals; see "Removing test data" below)
+3. **Existing projects** (schema already installed): run each file in `supabase/migrations/` that hasn't been applied yet, oldest first. Fresh installs don't need them — `schema.sql` already includes them.
 
 ## 2. Create the user accounts
 

@@ -203,10 +203,15 @@ create trigger trg_referrals_touch
 
 -- ============================================================================
 -- 8. ANALYTICS VIEWS  (all PHI-free)
+--   security_invoker = on: views run with the caller's privileges so the RLS
+--   policies on referrals/status_history apply. Without it a view runs as its
+--   owner (postgres), bypassing RLS — scope='own' viewers and even the anon
+--   key could read every referral through the view. Requires Postgres 15+.
 -- ============================================================================
 
 -- Convenience: is a referral in a terminal state?
-create or replace view v_referral_enriched as
+create or replace view v_referral_enriched
+  with (security_invoker = on) as
 select
   r.*,
   rp.name as referring_provider_name,
@@ -230,7 +235,8 @@ from referrals r
 join referring_providers rp on rp.id = r.referring_provider_id;
 
 -- Dashboard summary counts
-create or replace view v_dashboard_summary as
+create or replace view v_dashboard_summary
+  with (security_invoker = on) as
 select
   count(*) filter (
     where document_state <> 'closed'
@@ -262,7 +268,8 @@ select
 from referrals;
 
 -- Per-provider volume + completion rate
-create or replace view v_provider_stats as
+create or replace view v_provider_stats
+  with (security_invoker = on) as
 select
   rp.id   as provider_id,
   rp.name as provider_name,
@@ -280,6 +287,9 @@ from referring_providers rp
 left join referrals r on r.referring_provider_id = rp.id
 group by rp.id, rp.name
 order by total_referrals desc;
+
+-- Signed-out clients never read the views (defense in depth on top of RLS).
+revoke all on v_referral_enriched, v_dashboard_summary, v_provider_stats from anon;
 
 -- ============================================================================
 -- 9. ROW LEVEL SECURITY
