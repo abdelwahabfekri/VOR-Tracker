@@ -16,9 +16,12 @@ Built with Next.js (App Router) + Supabase, deploys on Vercel.
 
 - **To-Do** (admin) — calls and record-chases due now, grouped by urgency, one-tap outcome logging.
 - **Tracking** — every referral as a row with dual-track status (appointment + documents); the documents track stays greyed as *Awaiting appointment* until the visit is completed. Click a row for the full journey.
-- **Referral detail** — a shipping-style progress tracker, specialist reference (phone/fax), attempt counters, and a timestamped "tracking history" of every status change.
+- **Referral detail** — a shipping-style progress tracker, specialist reference (phone/fax), attempt counters, and a timestamped "tracking history" of every status change. Notes and the call log are visible to admins and to doctors allowed to see the referral. Admins also get **Edit details**, **Set follow-up date**, and **Correct status** (fixes a wrong entry with a required reason; history is appended, never rewritten).
 - **Dashboard** — stat cards then charts (provider volume, status mix, aging).
 - **New referral** (admin) — records the patient MRN and generates the `VOR-` tracking code.
+- **Add existing referral** (admin) — enters a referral already in progress at its real current stage, without inventing earlier history.
+- **Weekly Reports** (admin) — one report per internal provider: active referrals plus anything that changed or closed in the period, sorted by open date, with *Weekly activity* and *Follow-up* tags. Copies as a formatted table for Outlook (plain-text fallback). The app never sends email.
+- **Stale tags** — `NO UPDATE 7+ DAYS` / `14+ DAYS` on referrals with no real action for that long (separate from *Overdue*).
 - **Roles** — `admin` (you: full control) and `viewer` (providers: read-only).
 
 ---
@@ -28,8 +31,8 @@ Built with Next.js (App Router) + Supabase, deploys on Vercel.
 1. Go to [supabase.com](https://supabase.com) → **New project**. Note the project's **URL** and **anon key** (Project Settings → API).
 2. Open the **SQL Editor** and run, in order:
    - `supabase/schema.sql`  (tables, enums, code generator, analytics views, row-level security, and the six seeded providers)
-   - `supabase/seed.sql`    (optional — 5 test referrals; see "Removing test data" below)
-3. **Existing projects** (schema already installed): run each file in `supabase/migrations/` that hasn't been applied yet, oldest first. Fresh installs don't need them — `schema.sql` already includes them.
+   - `supabase/seed.sql`    (optional — 6 test referrals; see "Removing test data" below)
+3. **Existing projects** (schema already installed): run each file in `supabase/migrations/` that hasn't been applied yet, oldest first, **each file as its own run** (one SQL Editor execution per file — `20260926a` adds an enum value that `20260926b` uses, and Postgres can't use a new enum value in the same transaction). Fresh installs don't need them — `schema.sql` already includes them.
 
 ## 2. Create the user accounts
 
@@ -85,7 +88,7 @@ npm run dev                    # http://localhost:3000
 
 ## Removing the test data
 
-The 5 seed referrals all use the `VOR-999xxxx` range. To wipe them:
+The 6 seed referrals all use the `VOR-999xxxx` range. To wipe them:
 
 ```sql
 delete from referrals where code like 'VOR-999%';
@@ -106,11 +109,20 @@ The status engine (`src/lib/statusEngine.ts`) encodes the locked SOP rules:
 | Pre-appointment confirmation call | 24h before slot | — |
 | Post-appointment check | 24h after slot | — |
 | Reschedule | on request | 3 → flagged for review |
-| Records chase | every 5 days | 3 attempts → *Records unavailable* |
+| Visit done → *Records request needed* | due immediately: contact the specialist office | — |
+| *Records requested* (separate action, once the office was actually asked) | chase every 5 days | 3 attempts → *Records unavailable* |
+
+A completed visit does **not** mean records were requested. If the office can't
+be reached, the referral stays at *Records request needed* and the admin sets
+the next attempt with **Set follow-up date**.
 
 A no-show silently returns the referral to the scheduling cycle (no distinct
-status), per the agreed design. Every status change writes an immutable row to
-`status_history`, which powers both the tracking timeline and the analytics.
+status), per the agreed design.
+
+Every action is validated against the referral's current state on the server,
+then the row update and all of its `status_history` rows are written in one
+transaction (`apply_referral_change`). If the referral changed after the page
+was loaded, the action is refused with a "refresh and try again" message.
 
 ---
 
@@ -120,6 +132,10 @@ status), per the agreed design. Every status change writes an immutable row to
 - `referrals` — one row per referral (one specialist, one track pair): code,
   both track states, attempt counters, clock fields, lifecycle timestamps.
 - `status_history` — append-only log of every transition (the "scan history").
+  `track = 'meta'` rows record admin events that are not a transition
+  (follow-up date set, details edited, existing-referral baseline).
+- `referring_providers.report_email` — optional recipient for the weekly report.
+- RPCs: `apply_referral_change`, `create_referral` — atomic state + history writes.
 - `app_users` — role + visibility scope, linked 1:1 to Supabase auth.
 - Views: `v_referral_enriched`, `v_dashboard_summary`, `v_provider_stats`.
 

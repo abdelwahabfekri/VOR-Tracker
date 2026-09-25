@@ -17,6 +17,7 @@ export type AppointmentStatus =
 
 export type DocumentStatus =
   | "awaiting_appointment"
+  | "records_request_due"
   | "documents_requested"
   | "documents_received"
   | "documents_uploaded"
@@ -26,11 +27,15 @@ export type DocumentStatus =
 export type UserRole = "admin" | "viewer";
 export type ProviderScope = "all" | "own";
 export type Track = "appointment" | "document";
+// History rows can also be "meta": events that are not a transition on either
+// track (follow-up date set, details edited, existing-referral baseline).
+export type HistoryTrack = Track | "meta";
 
 export interface ReferringProvider {
   id: string;
   name: string; // "Last,First"
   active: boolean;
+  report_email: string | null;
 }
 
 export interface Referral {
@@ -61,7 +66,7 @@ export interface Referral {
 export interface StatusHistoryEntry {
   id: number;
   referral_id: string;
-  track: Track;
+  track: HistoryTrack;
   from_state: string | null;
   to_state: string;
   note_code: string | null;
@@ -96,6 +101,7 @@ export const APPT_LABEL: Record<AppointmentStatus, string> = {
 
 export const DOC_LABEL: Record<DocumentStatus, string> = {
   awaiting_appointment:    "Awaiting appointment",
+  records_request_due:     "Records request needed",
   documents_requested:     "Records requested",
   documents_received:      "Records received",
   documents_uploaded:      "Records uploaded",
@@ -121,6 +127,7 @@ export const APPT_INTENT: Record<AppointmentStatus, Intent> = {
 
 export const DOC_INTENT: Record<DocumentStatus, Intent> = {
   awaiting_appointment: "muted",
+  records_request_due: "soon",
   documents_requested: "docs",
   documents_received: "docs",
   documents_uploaded: "docs",

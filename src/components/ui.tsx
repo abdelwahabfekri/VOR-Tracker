@@ -104,3 +104,19 @@ export function AttemptBadge({ n, cap, label }: { n: number; cap: number; label:
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-xl2 border border-line bg-white shadow-card ${className}`}>{children}</div>;
 }
+
+// ---- Stale tag: no real action for 7+ / 14+ days (not the same as overdue) --
+export function StaleChip({ tag }: { tag: string | null }) {
+  if (!tag) return null;
+  const strong = tag.includes("14");
+  return (
+    <span
+      title="No status update for this long. Not the same as overdue."
+      className={`inline-flex items-center whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${
+        strong ? "bg-overdue-soft text-overdue" : "bg-soon-soft text-soon"
+      }`}
+    >
+      {tag}
+    </span>
+  );
+}

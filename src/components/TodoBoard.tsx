@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Referral, ReferringProvider } from "@/lib/types";
-import { urgency, nextActionLabel, CAPS } from "@/lib/statusEngine";
+import { urgency, nextActionLabel, staleTag, CAPS, type Action } from "@/lib/statusEngine";
 import { performAction } from "@/lib/actions";
 import { QuickActions } from "@/components/QuickActions";
-import { CodeChip, AttemptBadge, Card } from "@/components/ui";
+import { CodeChip, AttemptBadge, Card, StaleChip } from "@/components/ui";
 import { ProviderFilter } from "@/components/ProviderFilter";
 import { fmtShortDate } from "@/lib/tz";
 
@@ -21,8 +21,8 @@ export function TodoBoard({
   activeProvider?: string;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [toast, setToast] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
   // only referrals with a due action, sorted by urgency then due date
   const actionable = useMemo(() => {
@@ -41,17 +41,24 @@ export function TodoBoard({
   const soon = actionable.filter((x) => x.u === "soon");
   const upcoming = actionable.filter((x) => x.u === "scheduled");
 
-  function run(referralId: string, action: Parameters<typeof performAction>[1], note?: string) {
-    startTransition(async () => {
-      const res = await performAction(referralId, action, "outbound", note);
-      if (!res.ok) { setToast(res.error ?? "Something went wrong."); return; }
-      if (res.flag === "reschedule_cap_review") setToast("Reschedule limit reached — flagged for review.");
-      else if (res.flag === "parked_not_replying") setToast("Moved to ‘Unable to reach patient’.");
-      else if (res.flag === "documents_unavailable") setToast("Marked records unavailable.");
-      else setToast("Logged.");
-      router.refresh();
-      setTimeout(() => setToast(null), 2500);
-    });
+  async function run(r: Referral, action: Action, note?: string): Promise<boolean> {
+    setPending(true);
+    const res = await performAction(r.id, r.updated_at, action, "outbound", note);
+    setPending(false);
+    if (!res.ok) {
+      // stays up until dismissed — a failed action must not look like it worked
+      setToast({ ok: false, text: res.error ?? "Could not save. Try again." });
+      return false;
+    }
+    const text =
+      res.flag === "reschedule_cap_review" ? "Reschedule limit reached — flagged for review."
+      : res.flag === "parked_not_replying" ? "Moved to ‘Unable to reach patient’."
+      : res.flag === "documents_unavailable" ? "Marked records unavailable."
+      : "Logged.";
+    setToast({ ok: true, text });
+    router.refresh();
+    setTimeout(() => setToast(null), 2500);
+    return true;
   }
 
   return (
@@ -78,8 +85,14 @@ export function TodoBoard({
       <Section title="Upcoming" items={upcoming} run={run} pending={pending} tone="muted" />
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-navy px-4 py-2.5 text-sm text-white shadow-pop">
-          {toast}
+        <div
+          role={toast.ok ? "status" : "alert"}
+          className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-white shadow-pop ${toast.ok ? "bg-navy" : "bg-overdue"}`}
+        >
+          {toast.text}
+          {!toast.ok && (
+            <button onClick={() => setToast(null)} className="text-white/80 hover:text-white" aria-label="Dismiss">✕</button>
+          )}
         </div>
       )}
     </div>
@@ -100,7 +113,7 @@ function Section({
 }: {
   title: string;
   items: { r: Referral }[];
-  run: (id: string, a: Parameters<typeof performAction>[1], note?: string) => void;
+  run: (r: Referral, a: Action, note?: string) => Promise<boolean>;
   pending: boolean;
   tone: "overdue" | "soon" | "muted";
 }) {
@@ -119,6 +132,7 @@ function Section({
                 <div className="flex items-center gap-2">
                   <CodeChip code={r.code} />
                   <span className="text-sm text-muted">{r.referring_provider_name}</span>
+                  <StaleChip tag={staleTag(r)} />
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
                   <span className="font-medium text-ink">{nextActionLabel(r)}</span>
@@ -138,7 +152,7 @@ function Section({
               </div>
 
               <div className="flex items-center gap-2">
-                <QuickActions referral={r} onAction={(a, note) => run(r.id, a, note)} disabled={pending} />
+                <QuickActions referral={r} onAction={(a, note) => run(r, a, note)} disabled={pending} />
                 <Link
                   href={`/tracking/${r.code}`}
                   className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-navy hover:border-star"

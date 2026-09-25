@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Referral } from "@/lib/types";
 import { isActive } from "@/lib/types";
@@ -14,19 +14,24 @@ import { Card } from "@/components/ui";
 export function InboundCallPanel({ referral }: { referral: Referral }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const [msg, setMsg] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   if (!isActive(referral)) return null;
 
-  function run(action: Action, note?: string) {
-    startTransition(async () => {
-      const res = await performAction(referral.id, action, "inbound", note);
-      setMsg(res.ok ? "Incoming call logged." : res.error ?? "Error");
-      router.refresh();
-      setOpen(false);
-      setTimeout(() => setMsg(null), 2500);
-    });
+  async function run(action: Action, note?: string): Promise<boolean> {
+    setPending(true);
+    const res = await performAction(referral.id, referral.updated_at, action, "inbound", note);
+    setPending(false);
+    if (!res.ok) {
+      setMsg({ ok: false, text: res.error ?? "Could not save. Try again." });
+      return false;
+    }
+    setMsg({ ok: true, text: "Incoming call logged." });
+    setOpen(false);
+    router.refresh();
+    setTimeout(() => setMsg(null), 2500);
+    return true;
   }
 
   return (
@@ -54,7 +59,7 @@ export function InboundCallPanel({ referral }: { referral: Referral }) {
           <QuickActions referral={referral} onAction={run} disabled={pending} />
         </div>
       )}
-      {msg && <p className="mt-2 text-xs text-docs">{msg}</p>}
+      {msg && <p className={`mt-2 text-xs ${msg.ok ? "text-docs" : "text-overdue"}`}>{msg.text}</p>}
     </Card>
   );
 }

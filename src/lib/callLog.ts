@@ -30,6 +30,7 @@ const CALL_CODES = new Set([
   "no_show",
   "rescheduled",
   "declined",
+  "records_requested",
   "records_chased",
   "no_records_cap",
   "records_received",
@@ -65,6 +66,7 @@ const OUTCOME: Record<string, string> = {
   no_show: "No-show — back to scheduling",
   rescheduled: "Rescheduled to new date",
   declined: "Patient declined",
+  records_requested: "Records requested from specialist office",
   records_chased: "No records yet — chased",
   no_records_cap: "Records not received — closed",
   records_received: "Records received",
@@ -76,7 +78,7 @@ export function toCallLog(entries: StatusHistoryEntry[]): CallLogRow[] {
       const raw = e.note_code ?? "";
       const inbound = raw.startsWith("inbound_");
       const base = inbound ? raw.slice("inbound_".length) : raw;
-      if (!CALL_CODES.has(base)) return null;
+      if (!CALL_CODES.has(base) || e.track === "meta") return null;
       return {
         id: e.id,
         at: e.changed_at,
@@ -96,6 +98,7 @@ export function firstReachedMap(entries: StatusHistoryEntry[]): Record<string, s
   const map: Record<string, string> = {};
   const asc = [...entries].sort((a, b) => a.changed_at.localeCompare(b.changed_at));
   for (const e of asc) {
+    if (e.track === "meta") continue;
     if (!(e.to_state in map)) map[e.to_state] = e.changed_at;
   }
   return map;

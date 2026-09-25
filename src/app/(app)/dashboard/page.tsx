@@ -25,7 +25,7 @@ export default async function DashboardPage({
     ["referral_created", "patient_contacted", "awaiting_booking", "appointment_rescheduled"].includes(r.appointment_state)
   );
   const outstandingDocuments = activeReferrals.filter((r) =>
-    ["documents_requested", "documents_received"].includes(r.document_state)
+    ["records_request_due", "documents_requested", "documents_received"].includes(r.document_state)
   );
   const awaitingPatient = activeReferrals.filter((r) => r.appointment_state === "patient_not_replying");
 

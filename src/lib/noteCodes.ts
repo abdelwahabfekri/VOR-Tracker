@@ -1,5 +1,5 @@
 // Human-readable labels for the structured note_code values in status_history.
-// These are NON-PHI reason codes — never free text.
+// These are structured reason codes — never free text, never PHI.
 export const NOTE_LABEL: Record<string, string> = {
   created: "Referral created",
   no_answer: "No answer — VM left",
@@ -14,11 +14,19 @@ export const NOTE_LABEL: Record<string, string> = {
   declined: "Patient declined referral",
   cancelled: "Referral cancelled",
   reopened: "Re-engaged patient",
+  records_request_due: "Records request needed — contact specialist office",
+  records_requested: "Records requested from specialist office",
   records_chased: "Records chased",
   no_records_cap: "Records not received — max attempts, marked unavailable",
   records_received: "Records received",
   records_uploaded: "Records uploaded to eCW",
   closed: "Referral closed",
+  // Admin / system events — not a normal step forward
+  status_corrected: "Status corrected",
+  followup_set: "Follow-up date set",
+  details_edited: "Referral details edited",
+  existing_baseline: "Added to tracker as an existing referral",
+  migration_marker: "Records request needed (data migration)",
 };
 
 export function noteLabel(code: string | null): string {
