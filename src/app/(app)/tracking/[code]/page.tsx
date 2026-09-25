@@ -40,6 +40,10 @@ export default async function ReferralDetail({ params }: { params: { code: strin
             <CodeChip code={referral.code} big />
             <span className="text-sm text-muted">Tracking number</span>
           </div>
+          <div className="mt-2 text-sm">
+            <span className="text-muted">MRN </span>
+            <span className="font-mono font-medium text-ink">{referral.mrn ?? "—"}</span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <ApptChip state={referral.appointment_state} />
             <DocChip state={referral.document_state} dormant={dormant} />

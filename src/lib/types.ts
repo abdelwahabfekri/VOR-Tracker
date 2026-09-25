@@ -1,6 +1,6 @@
 // ============================================================================
 // Shared domain types — mirror the Supabase schema.
-// PRIVACY: no patient-identifiable fields exist anywhere in this model.
+// PRIVACY: the only patient identifier in this model is Referral.mrn (PHI).
 // ============================================================================
 
 export type AppointmentStatus =
@@ -36,6 +36,7 @@ export interface ReferringProvider {
 export interface Referral {
   id: string;
   code: string; // VOR-#######
+  mrn: string | null; // text, keeps leading zeros; null only on pre-MRN referrals
   referring_provider_id: string;
   referring_provider_name?: string;
   specialist_name: string | null;

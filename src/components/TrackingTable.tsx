@@ -36,6 +36,7 @@ export function TrackingTable({
     return byStatus.filter(
       (r) =>
         r.code.toLowerCase().includes(needle) ||
+        (r.mrn ?? "").toLowerCase() === needle ||
         (r.specialist_name ?? "").toLowerCase().includes(needle) ||
         (r.referring_provider_name ?? "").toLowerCase().includes(needle)
     );
@@ -56,7 +57,7 @@ export function TrackingTable({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search code, specialist, provider…"
+          placeholder="Search code, MRN, specialist, provider…"
           className="w-72 max-w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
         />
       </div>

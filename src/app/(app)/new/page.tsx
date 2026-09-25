@@ -14,7 +14,7 @@ export default async function NewReferralPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-semibold text-ink">New referral</h1>
         <p className="mt-1 text-sm text-muted">
-          Creates a tracking code. Copy it into the secured Excel sheet against the patient’s MRN.
+          Creates a tracking code for the patient’s referral.
         </p>
       </header>
       <NewReferralForm providers={providers} />

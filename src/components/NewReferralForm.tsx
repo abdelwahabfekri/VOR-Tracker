@@ -7,6 +7,8 @@ import { createReferral } from "@/lib/actions";
 import { Card, CodeChip } from "@/components/ui";
 import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 
+const MRN_MAX_LENGTH = 32; // mirrors the mrn_format check in schema.sql
+
 export function NewReferralForm({ providers }: { providers: ReferringProvider[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -14,6 +16,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
+    mrn: "",
     referring_provider_id: providers[0]?.id ?? "",
     specialist_name: "",
     specialty: "",
@@ -41,16 +44,13 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
       <Card className="p-7 text-center">
         <div className="text-2xl">✓</div>
         <h2 className="mt-2 text-lg font-semibold text-ink">Referral created</h2>
-        <p className="mt-1 text-sm text-muted">Copy this tracking code into the secured Excel sheet.</p>
+        <p className="mt-1 text-sm text-muted">Tracking code</p>
         <div className="mt-4 flex justify-center">
           <CodeChip code={created} big />
         </div>
-        <div className="mt-3 rounded-lg bg-soon-soft px-4 py-2.5 text-sm text-soon">
-          Reminder: this app holds no patient identity. The code↔MRN link lives only in the secured Excel sheet.
-        </div>
         <div className="mt-6 flex justify-center gap-3">
           <button
-            onClick={() => { setCreated(null); setForm({ ...form, specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()).slice(0, 10) }); }}
+            onClick={() => { setCreated(null); setForm({ ...form, mrn: "", specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()).slice(0, 10) }); }}
             className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-navy hover:border-star"
           >
             Add another
@@ -69,6 +69,19 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
   return (
     <Card className="p-6">
       <form onSubmit={submit} className="space-y-5">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-ink">MRN</label>
+          <input
+            value={form.mrn}
+            onChange={(e) => set("mrn", e.target.value)}
+            className="w-full rounded-lg border border-line px-3 py-2.5 text-sm font-mono outline-none focus:border-star focus:ring-2 focus:ring-star/20"
+            inputMode="text"
+            autoComplete="off"
+            maxLength={MRN_MAX_LENGTH}
+            required
+          />
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium text-ink">Referring provider</label>
           <select
@@ -134,7 +147,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
         </div>
 
         <div className="rounded-lg bg-canvas px-4 py-3 text-xs text-muted">
-          Do not enter any patient name, MRN, or other identifier here. This system stores operational data only.
+          MRN is the only patient identifier stored here. Do not enter patient names, dates of birth, or clinical details in any field.
         </div>
 
         {error && <div className="rounded-lg bg-overdue-soft px-3 py-2 text-sm text-overdue">{error}</div>}
