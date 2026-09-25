@@ -1,5 +1,5 @@
 -- ============================================================================
--- SEED — 5 test referrals across varied states.
+-- SEED — 6 test referrals across varied states.
 -- All codes use the VOR-999xxxx range so they are easy to spot and delete.
 --
 -- TO REMOVE ALL TEST DATA LATER, run:
@@ -56,6 +56,22 @@ select * from (
 ) as rows
 on conflict (code) do nothing;
 
+-- Visit done, records not yet requested from the specialist office.
+insert into referrals
+  (code, referring_provider_id, specialist_name, specialty, specialist_phone, specialist_fax,
+   appointment_state, document_state, appointment_slot,
+   contact_attempts, reschedule_count, document_attempts,
+   next_action_due, last_action_at, referral_date, completed_at, closed_at)
+select
+  'VOR-9990006', (select id from referring_providers where name='Sheth,Shaily'), 'Pediatric Eye Center', 'Pediatric', '718-555-0121', '718-555-0122',
+  'appointment_completed', 'records_request_due', now() - interval '2 days',
+  0, 0, 0,
+  now() - interval '1 day', now() - interval '1 day', now() - interval '12 days', now() - interval '1 day', null
+on conflict (code) do nothing;
+
+-- Provider report emails are left empty on purpose: fill them in from the
+-- Weekly Reports page. The report can still be previewed and copied without one.
+
 -- Minimal history so the tracking timeline isn't empty for seed rows.
 insert into status_history (referral_id, track, from_state, to_state, note_code, changed_at)
 select r.id, 'appointment', null, 'referral_created', 'created', r.referral_date
@@ -64,6 +80,10 @@ on conflict do nothing;
 
 insert into status_history (referral_id, track, from_state, to_state, note_code, changed_at)
 select r.id, 'appointment', 'referral_created', 'appointment_completed', 'visit_done', r.completed_at
+from referrals r where r.code like 'VOR-999%' and r.completed_at is not null;
+
+insert into status_history (referral_id, track, from_state, to_state, note_code, changed_at)
+select r.id, 'document', 'awaiting_appointment', 'records_request_due', 'records_request_due', r.completed_at
 from referrals r where r.code like 'VOR-999%' and r.completed_at is not null;
 
 insert into status_history (referral_id, track, from_state, to_state, note_code, changed_at)
