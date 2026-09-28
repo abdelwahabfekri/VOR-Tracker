@@ -39,13 +39,13 @@ export function TopNav({
   return (
     <header className="sticky top-0 z-40 bg-nav text-white shadow-overlay">
       <div className="pointer-events-none absolute inset-0 bg-nav-glow" aria-hidden />
-      <div className="relative mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 md:px-8">
+      <div className="relative mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-x-4 xl:flex-nowrap gap-y-3 px-4 py-3 md:px-8">
         {/* Left: logo + nav links */}
         <Link href="/tracking" className="flex shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:shadow-glow-star">
           <Image src="/logo-white.png" alt="Aizer — Referral Tracker" width={92} height={26} priority />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 xl:flex">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -64,21 +64,12 @@ export function TopNav({
         </nav>
 
         {/* Center: MRN search (full-width row on small screens) */}
-        <div className="order-last w-full lg:order-none lg:ml-2 lg:w-auto lg:min-w-[240px] lg:max-w-sm lg:flex-1">
+        <div className="order-last w-full xl:order-none xl:ml-2 xl:w-auto xl:min-w-[200px] xl:max-w-sm xl:flex-1">
           <MrnSearch />
         </div>
 
         {/* Right: new referral (admin) + user */}
-        <div className="ml-auto flex items-center gap-2">
-          {isAdmin && (
-            <Link
-              href="/new/existing"
-              title="Add a referral already in progress"
-              className="hidden whitespace-nowrap rounded-full border border-white/15 px-3 py-2 text-sm font-medium text-white/80 transition duration-fast hover:bg-white/10 hover:text-white 2xl:inline-flex"
-            >
-              Add existing
-            </Link>
-          )}
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {isAdmin && (
             <Link href="/new" className="btn btn-star rounded-full px-3 sm:px-3.5">
               <Icon name="plus" className="h-4 w-4" strokeWidth={2.4} />
@@ -92,7 +83,7 @@ export function TopNav({
             onClick={() => setMenuOpen((o) => !o)}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white xl:hidden"
           >
             <Icon name={menuOpen ? "x" : "menu"} className="h-5 w-5" />
             <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
@@ -100,7 +91,7 @@ export function TopNav({
         </div>
 
         {menuOpen && (
-          <nav id="mobile-nav" aria-label="Main" className="w-full animate-fade-in lg:hidden">
+          <nav id="mobile-nav" aria-label="Main" className="w-full animate-fade-in xl:hidden">
             <div className="grid gap-1 rounded-2xl bg-white/5 p-1.5 sm:grid-cols-2">
               {links.map((l) => (
                 <Link
@@ -175,6 +166,12 @@ function UserMenu({ userName, userRole, isAdmin }: { userName: string; userRole:
             </div>
           </div>
           <div className="my-1 h-px bg-line" />
+          {isAdmin && (
+            <Link href="/new/existing" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink hover:bg-canvas">
+              <Icon name="history" className="h-4 w-4 text-muted" />
+              Add existing referral
+            </Link>
+          )}
           <form action={signOut}>
             <button type="submit" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink hover:bg-canvas">
               <Icon name="logout" className="h-4 w-4 text-muted" />
@@ -336,7 +333,7 @@ function MrnSearch() {
       </div>
 
       {showPanel && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 min-w-[min(100%,360px)] animate-fade-up overflow-hidden rounded-2xl border border-line bg-white text-ink shadow-overlay lg:w-[440px]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 min-w-[min(100%,360px)] animate-fade-up overflow-hidden rounded-2xl border border-line bg-white text-ink shadow-overlay xl:w-[440px]">
           {isVor ? (
             <button
               type="button"
