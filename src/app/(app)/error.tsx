@@ -19,10 +19,10 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <button onClick={reset} className="btn btn-primary">
-            <Icon name="refresh" className="h-4 w-4" /> Try again
+            <Icon name="refresh" className="h-4 w-4" /> Try Again
           </button>
           <button onClick={() => window.location.reload()} className="btn btn-secondary">
-            Reload page
+            Reload Page
           </button>
         </div>
       </div>

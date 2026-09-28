@@ -265,7 +265,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <label htmlFor="ex-due" className="sr-only">Override next follow-up</label>
                 <input id="ex-due" type="datetime-local" className="field field-sm w-auto" value={f.due} onChange={(e) => set("due", e.target.value)} />
-                {f.due && <button type="button" className="btn btn-ghost btn-sm" onClick={() => set("due", "")}>Use suggestion</button>}
+                {f.due && <button type="button" className="btn btn-ghost btn-sm" onClick={() => set("due", "")}>Use Suggestion</button>}
               </div>
             </div>
           )}
@@ -312,7 +312,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
           </button>
         ) : (
           <button type="submit" disabled={pending} className="btn btn-primary">
-            {pending ? <><Spinner className="h-4 w-4" /> Saving…</> : <>Add existing referral <Icon name="check" className="h-4 w-4" /></>}
+            {pending ? <><Spinner className="h-4 w-4" /> Saving…</> : <>Add Existing Referral <Icon name="check" className="h-4 w-4" /></>}
           </button>
         )}
       </div>

@@ -139,8 +139,8 @@ function NewReferralMenu() {
         className="btn btn-star rounded-full px-3 sm:px-3.5"
       >
         <Icon name="plus" className="h-4 w-4" strokeWidth={2.4} />
-        <span className="hidden sm:inline">New referral</span>
-        <span className="sr-only sm:hidden">New referral</span>
+        <span className="hidden sm:inline">New Referral</span>
+        <span className="sr-only sm:hidden">New Referral</span>
         <Icon name="chevronDown" className={`hidden h-3.5 w-3.5 transition-transform duration-fast sm:block ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -148,14 +148,14 @@ function NewReferralMenu() {
           <Link href="/new" role="menuitem" onClick={() => setOpen(false)} className={item}>
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-star/10 text-star"><Icon name="plus" className="h-4 w-4" strokeWidth={2.2} /></span>
             <span>
-              <span className="block text-sm font-semibold">New referral</span>
+              <span className="block text-sm font-semibold">New Referral</span>
               <span className="block text-xs text-muted">Start tracking and generate a VOR code</span>
             </span>
           </Link>
           <Link href="/new/existing" role="menuitem" onClick={() => setOpen(false)} className={item}>
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy/5 text-navy"><Icon name="history" className="h-4 w-4" /></span>
             <span>
-              <span className="block text-sm font-semibold">Existing referral</span>
+              <span className="block text-sm font-semibold">Existing Referral</span>
               <span className="block text-xs text-muted">Already in progress — add it at its current stage</span>
             </span>
           </Link>
@@ -214,7 +214,7 @@ function UserMenu({ userName, userRole, isAdmin }: { userName: string; userRole:
           <form action={signOut}>
             <button type="submit" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink hover:bg-canvas">
               <Icon name="logout" className="h-4 w-4 text-muted" />
-              Sign out
+              Sign Out
             </button>
           </form>
         </div>
@@ -397,7 +397,7 @@ function MrnSearch() {
               <div>
                 <div className="font-semibold text-overdue">{state.message}</div>
                 <button type="button" onClick={() => run(term, true)} className="mt-1 text-xs font-semibold text-navy underline-offset-2 hover:underline">
-                  Try again
+                  Try Again
                 </button>
               </div>
             </div>

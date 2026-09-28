@@ -47,7 +47,7 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
         </div>
         <button className="btn btn-danger" onClick={() => setOpen(true)}>
           <Icon name="trash" className="h-4 w-4" />
-          Delete referral
+          Delete Referral
         </button>
       </div>
 
@@ -74,9 +74,9 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
           </div>
           <InlineError>{error}</InlineError>
           <div className="flex justify-end gap-2">
-            <button type="button" className="btn btn-ghost" onClick={close}>Keep referral</button>
+            <button type="button" className="btn btn-ghost" onClick={close}>Keep Referral</button>
             <button type="submit" className="btn btn-danger-solid" disabled={pending || typed !== referral.code}>
-              {pending ? <><Spinner className="h-3.5 w-3.5" /> Deleting…</> : <><Icon name="trash" className="h-4 w-4" /> Delete permanently</>}
+              {pending ? <><Spinner className="h-3.5 w-3.5" /> Deleting…</> : <><Icon name="trash" className="h-4 w-4" /> Delete Permanently</>}
             </button>
           </div>
         </form>

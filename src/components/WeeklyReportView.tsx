@@ -75,7 +75,7 @@ export function WeeklyReportView(props: {
 
   const copied = (key: string) => status?.key === key && status.ok;
   const label = (key: string, text: string) =>
-    status?.key === key ? (status.ok ? "Copied" : "Copy failed") : text;
+    status?.key === key ? (status.ok ? "Copied" : "Copy Failed") : text;
   const copyBtn = (key: string, text: string) => (
     <>
       <Icon name={copied(key) ? "check" : "copy"} className={`h-4 w-4 ${copied(key) ? "animate-check-pop" : ""}`} strokeWidth={copied(key) ? 2.4 : 1.8} />
@@ -124,19 +124,19 @@ export function WeeklyReportView(props: {
 
       {/* Copy actions — in the order you use them */}
       <Card className="p-4 md:p-5">
-        <RecipientEditor key={props.provider.id} provider={props.provider} onCopy={(email) => run("recipient", () => copyText(email), email)} copyLabel={label("recipient", "Copy recipient")} copied={copied("recipient")} />
+        <RecipientEditor key={props.provider.id} provider={props.provider} onCopy={(email) => run("recipient", () => copyText(email), email)} copyLabel={label("recipient", "Copy Recipient")} copied={copied("recipient")} />
         <div className="mt-4">
           <div className="field-label">Subject</div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="min-w-0 flex-1 rounded-ctl border border-line bg-canvas px-3 py-2.5 text-sm text-ink">{props.subject}</div>
-            <button className={`btn btn-secondary ${flash("subject")}`} onClick={() => run("subject", () => copyText(props.subject), props.subject)}>{copyBtn("subject", "Copy subject")}</button>
+            <button className={`btn btn-secondary ${flash("subject")}`} onClick={() => run("subject", () => copyText(props.subject), props.subject)}>{copyBtn("subject", "Copy Subject")}</button>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button className={`btn btn-primary ${flash("email")}`} onClick={() => run("email", () => copyRich(props.email), props.email.text)}>
-            {copyBtn("email", "Copy email")}
+            {copyBtn("email", "Copy Email")}
           </button>
-          <button className={`btn btn-secondary ${flash("table")}`} onClick={() => run("table", () => copyRich(props.table), props.table.text)}>{copyBtn("table", "Copy table only")}</button>
+          <button className={`btn btn-secondary ${flash("table")}`} onClick={() => run("table", () => copyRich(props.table), props.table.text)}>{copyBtn("table", "Copy Table Only")}</button>
           <span className="text-xs text-muted">Paste into Outlook — the table keeps its formatting.</span>
         </div>
         {manual !== null && (
@@ -220,7 +220,7 @@ function RecipientEditor({
       ) : (
         <div className="flex flex-wrap items-center gap-3 rounded-ctl bg-soon-soft px-3 py-2.5 text-sm text-soon">
           No report email saved for this provider. You can still preview and copy the report.
-          <button onClick={() => setEditing(true)} className="font-semibold underline">Add email</button>
+          <button onClick={() => setEditing(true)} className="font-semibold underline">Add Email</button>
         </div>
       )}
       {error && <div className="mt-2"><InlineError>{error}</InlineError></div>}

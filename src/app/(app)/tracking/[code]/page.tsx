@@ -30,7 +30,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
   return (
     <div className="space-y-6">
       <Link href="/tracking" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted transition hover:text-navy">
-        <Icon name="arrowLeft" className="h-4 w-4" /> Back to tracking
+        <Icon name="arrowLeft" className="h-4 w-4" /> Back to Tracking
       </Link>
 
       {/* 1. Identity */}

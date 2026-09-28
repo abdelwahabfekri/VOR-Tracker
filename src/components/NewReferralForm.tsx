@@ -115,7 +115,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
         <InlineError>{error}</InlineError>
 
         <button type="submit" disabled={pending} className="btn btn-primary w-full py-3">
-          {pending ? <><Spinner className="h-4 w-4" /> Creating…</> : <>Create referral &amp; generate code <Icon name="arrowRight" className="btn-icon h-4 w-4" /></>}
+          {pending ? <><Spinner className="h-4 w-4" /> Creating…</> : <>Create Referral &amp; Generate Code <Icon name="arrowRight" className="btn-icon h-4 w-4" /></>}
         </button>
       </form>
     </Card>
@@ -153,9 +153,9 @@ export function SuccessCard({
         </div>
       </div>
       <div className="mt-7 flex justify-center gap-3">
-        <button onClick={onAnother} className="btn btn-secondary">Add another</button>
+        <button onClick={onAnother} className="btn btn-secondary">Add Another</button>
         <button onClick={onOpen} className="btn btn-primary">
-          Open referral <Icon name="arrowRight" className="btn-icon h-4 w-4" />
+          Open Referral <Icon name="arrowRight" className="btn-icon h-4 w-4" />
         </button>
       </div>
     </Card>

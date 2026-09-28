@@ -68,7 +68,7 @@ export default async function DashboardPage({
       <PageHeader title="Dashboard" description="Operational metrics across referrals.">
         <div role="tablist" aria-label="Range" className="flex rounded-ctl bg-white p-1 shadow-surface ring-1 ring-inset ring-line">
           <RangeLink range="active" current={range}>Active</RangeLink>
-          <RangeLink range="all" current={range}>All time</RangeLink>
+          <RangeLink range="all" current={range}>All Time</RangeLink>
         </div>
       </PageHeader>
 
@@ -106,7 +106,7 @@ export default async function DashboardPage({
       ) : (
         <p className="mt-4 flex items-center gap-2 text-xs text-muted">
           <Icon name="info" className="h-3.5 w-3.5" />
-          Showing active referrals only. Switch to <Link href="/dashboard?range=all" className="font-semibold text-navy hover:underline">All time</Link> for closure outcomes and completion time.
+          Showing active referrals only. Switch to <Link href="/dashboard?range=all" className="font-semibold text-navy hover:underline">All Time</Link> for closure outcomes and completion time.
         </p>
       )}
 

@@ -62,8 +62,8 @@ export function QuickActions({
   if (a === "referral_created" || a === "patient_contacted" || a === "awaiting_booking") {
     buttons = [
       open("Booked", "primary", "book"),
-      instant("Awaiting booking", "secondary", { kind: "awaiting_booking" }),
-      instant("No answer", "secondary", { kind: "log_no_answer" }),
+      instant("Awaiting Booking", "secondary", { kind: "awaiting_booking" }),
+      instant("No Answer", "secondary", { kind: "log_no_answer" }),
       open("Declined", "danger", "decline"),
     ];
   } else if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
@@ -71,31 +71,31 @@ export function QuickActions({
     // the post-visit outcomes are offered instead.
     const slotPassed = !!referral.appointment_slot && new Date(referral.appointment_slot).getTime() <= Date.now();
     buttons = slotPassed
-      ? [instant("Visit done", "primary", { kind: "mark_completed" }), instant("No-show", "secondary", { kind: "mark_no_show" })]
-      : [instant("Confirmed", "primary", { kind: "confirm_attendance" }), instant("No answer", "secondary", { kind: "precall_no_answer" })];
+      ? [instant("Visit Done", "primary", { kind: "mark_completed" }), instant("No-Show", "secondary", { kind: "mark_no_show" })]
+      : [instant("Confirmed", "primary", { kind: "confirm_attendance" }), instant("No Answer", "secondary", { kind: "precall_no_answer" })];
     buttons.push(open("Reschedule", "secondary", "reschedule"));
   } else if (a === "appointment_confirmed") {
     buttons = [
-      instant("Visit done", "primary", { kind: "mark_completed" }),
+      instant("Visit Done", "primary", { kind: "mark_completed" }),
       open("Rescheduled", "secondary", "reschedule"),
-      instant("No-show", "secondary", { kind: "mark_no_show" }),
+      instant("No-Show", "secondary", { kind: "mark_no_show" }),
     ];
   } else if (a === "patient_not_replying") {
-    buttons = [instant("Re-engage", "primary", { kind: "reopen_contact" }), instant("Cancel referral", "danger", { kind: "cancel" })];
+    buttons = [instant("Re-engage", "primary", { kind: "reopen_contact" }), instant("Cancel Referral", "danger", { kind: "cancel" })];
   } else if (a === "appointment_completed") {
     if (d === "records_request_due") {
-      // "Records requested" only once the office was actually reached and asked.
+      // "Records Requested" only once the office was actually reached and asked.
       // Couldn't reach them -> set when to try again; the status stays.
       buttons = [
-        instant("Records requested", "primary", { kind: "records_requested" }),
-        open("Couldn’t reach — set follow-up", "secondary", "followup"),
+        instant("Records Requested", "primary", { kind: "records_requested" }),
+        open("Couldn’t Reach — Set Follow-Up", "secondary", "followup"),
       ];
     } else if (d === "documents_requested") {
-      buttons = [instant("Records in", "primary", { kind: "doc_received" }), instant("No response", "secondary", { kind: "doc_chase_no_response" })];
+      buttons = [instant("Records In", "primary", { kind: "doc_received" }), instant("No Response", "secondary", { kind: "doc_chase_no_response" })];
     } else if (d === "documents_received") {
       buttons = [instant("Uploaded to eCW", "primary", { kind: "doc_uploaded" })];
     } else if (d === "documents_uploaded") {
-      buttons = [instant("Close referral", "primary", { kind: "close" })];
+      buttons = [instant("Close Referral", "primary", { kind: "close" })];
     }
   }
 
@@ -134,7 +134,7 @@ export function QuickActions({
         description="The confirmation call is scheduled 24 hours before the appointment."
       >
         <SlotForm
-          confirmLabel={prompt === "reschedule" ? "Save new date" : "Book appointment"}
+          confirmLabel={prompt === "reschedule" ? "Save New Date" : "Book Appointment"}
           onPick={(slot, n) => fromPrompt(prompt === "reschedule" ? { kind: "reschedule", slot } : { kind: "book_appointment", slot }, n)}
           onCancel={() => setPrompt(null)}
         />
@@ -147,7 +147,7 @@ export function QuickActions({
         description="The records status stays “Records request needed”; only the follow-up date moves."
       >
         <SlotForm
-          confirmLabel="Set follow-up"
+          confirmLabel="Set Follow-Up"
           warnPast
           onPick={(due, n) => fromPrompt({ kind: "set_followup", due }, n)}
           onCancel={() => setPrompt(null)}
@@ -161,7 +161,7 @@ export function QuickActions({
         description="This closes the referral as Declined. It can be undone later only with Correct status."
       >
         <ReasonForm
-          confirmLabel="Confirm decline"
+          confirmLabel="Confirm Decline"
           onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
           onCancel={() => setPrompt(null)}
         />

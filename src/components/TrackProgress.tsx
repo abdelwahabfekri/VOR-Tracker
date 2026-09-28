@@ -403,11 +403,11 @@ function VerticalRoute({ model, justDone }: { model: JourneyModel; justDone: Set
       {hidden > 0 && !showAll && (
         <button onClick={() => setShowAll(true)} className="btn btn-ghost btn-sm ml-9 mt-1">
           <Icon name="chevronDown" className="h-3.5 w-3.5" />
-          Show {hidden} upcoming milestone{hidden === 1 ? "" : "s"}
+          Show {hidden} Upcoming Milestone{hidden === 1 ? "" : "s"}
         </button>
       )}
       {showAll && pivot >= 0 && (
-        <button onClick={() => setShowAll(false)} className="btn btn-ghost btn-sm ml-9 mt-1">Hide upcoming</button>
+        <button onClick={() => setShowAll(false)} className="btn btn-ghost btn-sm ml-9 mt-1">Hide Upcoming</button>
       )}
     </div>
   );

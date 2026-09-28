@@ -177,7 +177,7 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
         </div>
       </div>
       <ErrorLine error={error} />
-      <button type="submit" className={primaryBtn} disabled={pending}>{pending ? "Saving…" : "Save details"}</button>
+      <button type="submit" className={primaryBtn} disabled={pending}>{pending ? "Saving…" : "Save Details"}</button>
     </form>
   );
 }
@@ -223,7 +223,7 @@ function SetFollowup({ referral, onDone }: { referral: Referral; onDone: () => v
       )}
       <ErrorLine error={error} />
       <button type="submit" className={primaryBtn} disabled={pending || !due || (inPast && !confirmPast)}>
-        {pending ? "Saving…" : "Set follow-up"}
+        {pending ? "Saving…" : "Set Follow-Up"}
       </button>
     </form>
   );
@@ -336,7 +336,7 @@ function CorrectStatus({ referral, onDone }: { referral: Referral; onDone: () =>
         className="btn btn-danger-solid"
         disabled={pending || !preview || "problem" in preview || !reason.trim()}
       >
-        {pending ? "Saving…" : "Confirm correction"}
+        {pending ? "Saving…" : "Confirm Correction"}
       </button>
     </form>
   );

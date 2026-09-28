@@ -76,7 +76,7 @@ export default function LoginPage() {
             <InlineError>{error}</InlineError>
 
             <button type="submit" disabled={busy} className="btn btn-primary w-full py-2.5">
-              {busy ? <><Spinner className="h-4 w-4" /> Signing in…</> : "Sign in"}
+              {busy ? <><Spinner className="h-4 w-4" /> Signing In…</> : "Sign In"}
             </button>
           </form>
         </div>

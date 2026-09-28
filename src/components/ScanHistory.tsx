@@ -132,7 +132,7 @@ export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
       {sorted.length > INITIAL && (
         <button onClick={() => setAll((v) => !v)} className="btn btn-ghost btn-sm mt-4">
           <Icon name={all ? "chevronDown" : "history"} className={`h-3.5 w-3.5 ${all ? "rotate-180" : ""}`} />
-          {all ? "Show recent only" : `Show full history (${sorted.length} events)`}
+          {all ? "Show Recent Only" : `Show Full History (${sorted.length} events)`}
         </button>
       )}
     </div>

@@ -107,8 +107,8 @@ export function DetailActions({ referral, isAdmin }: { referral: Referral; isAdm
         <div className="mt-5 border-t border-line/70 pt-4">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div role="radiogroup" aria-label="Who made the call" className="flex rounded-ctl bg-white/70 p-1 ring-1 ring-inset ring-line">
-              <ModeButton active={mode === "outbound"} onClick={() => setMode("outbound")} icon="phoneOut">We called</ModeButton>
-              <ModeButton active={mode === "inbound"} onClick={() => setMode("inbound")} icon="phoneIn">Patient called us</ModeButton>
+              <ModeButton active={mode === "outbound"} onClick={() => setMode("outbound")} icon="phoneOut">We Called</ModeButton>
+              <ModeButton active={mode === "inbound"} onClick={() => setMode("inbound")} icon="phoneIn">Patient Called Us</ModeButton>
             </div>
             <span className="text-xs text-muted">
               {mode === "inbound" ? "Logged as an incoming call — it can still advance the referral." : "Log what happened on this step."}

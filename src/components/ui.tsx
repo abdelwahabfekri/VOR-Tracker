@@ -304,7 +304,7 @@ export function ErrorState({
       {children && <p className="mx-auto mt-1 max-w-sm text-sm text-muted">{children}</p>}
       {onRetry && (
         <button onClick={onRetry} className="btn btn-secondary mt-4">
-          <Icon name="refresh" /> Try again
+          <Icon name="refresh" /> Try Again
         </button>
       )}
     </div>
