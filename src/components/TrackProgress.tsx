@@ -13,6 +13,7 @@ const APPT_STOPS: { key: AppointmentStatus; label: string }[] = [
   { key: "appointment_completed", label: "Visit done" },
 ];
 const DOC_STOPS: { key: DocumentStatus; label: string }[] = [
+  { key: "records_request_due", label: "Records request needed" },
   { key: "documents_requested", label: "Records requested" },
   { key: "documents_received", label: "Records received" },
   { key: "documents_uploaded", label: "Uploaded" },

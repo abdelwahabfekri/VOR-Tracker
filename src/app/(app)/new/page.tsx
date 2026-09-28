@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMe, getProviders } from "@/lib/data";
 import { NewReferralForm } from "@/components/NewReferralForm";
@@ -14,7 +15,10 @@ export default async function NewReferralPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-semibold text-ink">New referral</h1>
         <p className="mt-1 text-sm text-muted">
-          Creates a tracking code. Copy it into the secured Excel sheet against the patient’s MRN.
+          Creates a tracking code for the patient’s referral.{" "}
+          <Link href="/new/existing" className="font-medium text-navy underline-offset-2 hover:underline">
+            Already in progress? Add existing referral
+          </Link>
         </p>
       </header>
       <NewReferralForm providers={providers} />

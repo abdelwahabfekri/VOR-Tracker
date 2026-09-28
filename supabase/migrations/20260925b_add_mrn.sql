@@ -6,8 +6,8 @@
 --
 -- Stage 1 (this file): column is nullable so existing referrals stay valid.
 -- The app requires MRN on every new referral.
--- Stage 2 (later, once every existing referral has an MRN):
---   alter table referrals alter column mrn set not null;
+-- Stage 2: 20260928_mrn_required.sql (deletes the pre-MRN test referrals and
+-- sets NOT NULL).
 --
 -- Idempotent. Run once in the Supabase SQL Editor.
 -- ============================================================================

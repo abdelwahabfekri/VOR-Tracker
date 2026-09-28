@@ -5,19 +5,22 @@ import type { Referral } from "@/lib/types";
 import type { Action } from "@/lib/statusEngine";
 import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 
-// Presents only the actions that make sense for the referral's current state.
-// Every action can carry an optional free-text note, stored on that one
-// status_history entry (admin-only — never surfaced to viewer UI).
+// Presents only the actions that make sense for the referral's current state
+// (the server re-checks every one). Every action can carry an optional
+// free-text note, stored on its status_history entry and shown to admins and
+// to doctors allowed to see the referral.
+//   onAction resolves true on success; typed input is kept on failure so the
+//   user can retry.
 export function QuickActions({
   referral,
   onAction,
   disabled,
 }: {
   referral: Referral;
-  onAction: (a: Action, note?: string) => void;
+  onAction: (a: Action, note?: string) => Promise<boolean>;
   disabled?: boolean;
 }) {
-  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule" | "decline">(null);
+  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule" | "decline" | "followup">(null);
   const [note, setNote] = useState("");
   const a = referral.appointment_state;
   const d = referral.document_state;
@@ -28,10 +31,14 @@ export function QuickActions({
   const ghost = `${btn} border border-line text-navy hover:border-star`;
   const danger = `${btn} border border-overdue/30 text-overdue hover:bg-overdue-soft`;
 
-  // Fire an instant action using whatever note is currently typed, then clear it.
-  function fire(action: Action) {
-    onAction(action, note.trim() || undefined);
-    setNote("");
+  // Fire an instant action using whatever note is currently typed; clear it on success.
+  async function fire(action: Action) {
+    if (await onAction(action, note.trim() || undefined)) setNote("");
+  }
+
+  // Close an open prompt only once its action succeeded.
+  async function fromPrompt(action: Action, n?: string) {
+    if (await onAction(action, n)) setSlotOpen(null);
   }
 
   const noteField = (
@@ -55,7 +62,7 @@ export function QuickActions({
         {noteField}
         {slotOpen === "book" && (
           <SlotPrompt
-            onPick={(slot, n) => { onAction({ kind: "book_appointment", slot }, n); setSlotOpen(null); }}
+            onPick={(slot, n) => fromPrompt({ kind: "book_appointment", slot }, n)}
             onCancel={() => setSlotOpen(null)}
           />
         )}
@@ -63,7 +70,7 @@ export function QuickActions({
           <ReasonPrompt
             label="Reason"
             confirmLabel="Confirm decline"
-            onConfirm={(reason) => { onAction({ kind: "patient_declined" }, reason); setSlotOpen(null); }}
+            onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
             onCancel={() => setSlotOpen(null)}
           />
         )}
@@ -71,18 +78,29 @@ export function QuickActions({
     );
   }
 
-  // Track 1 — pre-appointment confirmation
+  // Track 1 — pre-appointment confirmation. Once the slot has passed without a
+  // confirmation (pre-call unanswered), the post-visit outcomes are offered too.
   if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
+    const slotPassed = !!referral.appointment_slot && new Date(referral.appointment_slot).getTime() <= Date.now();
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => fire({ kind: "confirm_attendance" })}>Confirmed</button>
-        <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "precall_no_answer" })}>No answer</button>
+        {slotPassed ? (
+          <>
+            <button className={primary} disabled={disabled} onClick={() => fire({ kind: "mark_completed" })}>Visit done</button>
+            <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "mark_no_show" })}>No-show</button>
+          </>
+        ) : (
+          <>
+            <button className={primary} disabled={disabled} onClick={() => fire({ kind: "confirm_attendance" })}>Confirmed</button>
+            <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "precall_no_answer" })}>No answer</button>
+          </>
+        )}
         <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("reschedule")}>Reschedule</button>
         {noteField}
 
         {slotOpen === "reschedule" && (
           <SlotPrompt
-            onPick={(slot, n) => { onAction({ kind: "reschedule", slot }, n); setSlotOpen(null); }}
+            onPick={(slot, n) => fromPrompt({ kind: "reschedule", slot }, n)}
             onCancel={() => setSlotOpen(null)}
           />
         )}
@@ -100,7 +118,7 @@ export function QuickActions({
         {noteField}
         {slotOpen === "reschedule" && (
           <SlotPrompt
-            onPick={(slot, n) => { onAction({ kind: "reschedule", slot }, n); setSlotOpen(null); }}
+            onPick={(slot, n) => fromPrompt({ kind: "reschedule", slot }, n)}
             onCancel={() => setSlotOpen(null)}
           />
         )}
@@ -121,6 +139,28 @@ export function QuickActions({
 
   // Track 2 — documents
   if (a === "appointment_completed") {
+    if (d === "records_request_due") {
+      // "Records requested" only once the office was actually reached and asked.
+      // Couldn't reach them -> set when to try again; the status stays.
+      return (
+        <div className="flex flex-wrap items-center gap-2">
+          <button className={primary} disabled={disabled} onClick={() => fire({ kind: "records_requested" })}>Records requested</button>
+          <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("followup")}>Couldn’t reach — set follow-up</button>
+          {noteField}
+          {slotOpen === "followup" && (
+            <SlotPrompt
+              confirmLabel="Set follow-up"
+              onPick={(due, n) => {
+                // a past date makes the referral overdue immediately — confirm first
+                if (new Date(due).getTime() < Date.now() && !window.confirm("That date is in the past — the referral will show as overdue right away. Continue?")) return;
+                fromPrompt({ kind: "set_followup", due }, n);
+              }}
+              onCancel={() => setSlotOpen(null)}
+            />
+          )}
+        </div>
+      );
+    }
     if (d === "documents_requested") {
       return (
         <div className="flex flex-wrap items-center gap-2">

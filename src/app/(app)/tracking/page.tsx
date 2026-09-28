@@ -5,7 +5,7 @@ import { TrackingTable } from "@/components/TrackingTable";
 export default async function TrackingPage({
   searchParams,
 }: {
-  searchParams: { provider?: string; status?: string };
+  searchParams: { provider?: string; status?: string; q?: string };
 }) {
   const me = await getMe();
   if (!me) redirect("/login");
@@ -30,6 +30,7 @@ export default async function TrackingPage({
         providers={providers}
         activeProvider={providerId}
         activeStatus={activeStatus}
+        initialQuery={searchParams.q ?? ""}
       />
     </div>
   );

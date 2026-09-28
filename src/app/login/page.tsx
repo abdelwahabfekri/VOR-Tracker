@@ -83,7 +83,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-star-200/60">
-          Operational data only · No patient information is stored in this system
+          Contains patient MRNs · Authorized staff only
         </p>
       </div>
     </div>

@@ -1,6 +1,32 @@
 import type { StatusHistoryEntry } from "@/lib/types";
+import { APPT_LABEL, DOC_LABEL } from "@/lib/types";
 import { noteLabel } from "@/lib/noteCodes";
 import { fmtDateTime } from "@/lib/tz";
+
+function stateLabel(track: string, s: string | null): string {
+  if (!s) return "—";
+  return (track === "document" ? DOC_LABEL : APPT_LABEL)[s as never] ?? s;
+}
+
+// Admin/system events carry extra context worth showing inline.
+function detail(e: StatusHistoryEntry): string | null {
+  switch (e.note_code) {
+    case "status_corrected":
+      return `${stateLabel(e.track, e.from_state)} → ${stateLabel(e.track, e.to_state)}`;
+    case "followup_set":
+      return `Next follow-up: ${fmtDateTime(e.to_state)}`;
+    case "existing_baseline": {
+      const [a, d] = e.to_state.split("/");
+      return `Entered at: ${stateLabel("appointment", a)} · ${stateLabel("document", d)}`;
+    }
+    case "details_edited":
+      return e.note_text; // lists field names only, never values
+    default:
+      return null;
+  }
+}
+
+const TRACK_LABEL: Record<string, string> = { appointment: "appointment", document: "records", meta: "admin" };
 
 // Shipping-style "scan history": newest event first, each timestamped.
 export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
@@ -26,10 +52,11 @@ export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
               <div className={`text-sm font-medium ${isLatest ? "text-ink" : "text-ink/80"}`}>
                 {noteLabel(e.note_code)}
               </div>
+              {detail(e) && <div className="mt-0.5 text-xs text-ink/70">{detail(e)}</div>}
               <div className="mt-0.5 text-xs text-muted">
                 {fmtDateTime(e.changed_at)}
                 <span className="ml-2 uppercase tracking-wide text-[10px] text-muted/70">
-                  {e.track === "document" ? "records" : "appointment"}
+                  {TRACK_LABEL[e.track] ?? e.track}
                 </span>
               </div>
             </div>

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Referral, ReferringProvider } from "@/lib/types";
 import { isActive, closedKind, CLOSED_KIND_LABEL, CLOSED_KIND_INTENT } from "@/lib/types";
-import { ApptChip, DocChip, CodeChip, Card, INTENT_CLASS } from "@/components/ui";
+import { ApptChip, DocChip, CodeChip, Card, INTENT_CLASS, StaleChip } from "@/components/ui";
+import { staleTag } from "@/lib/statusEngine";
 import { ProviderFilter } from "@/components/ProviderFilter";
 import { fmtDate } from "@/lib/tz";
 
@@ -16,14 +17,16 @@ export function TrackingTable({
   providers,
   activeProvider,
   activeStatus = "active",
+  initialQuery = "",
 }: {
   referrals: Referral[];
   providers: ReferringProvider[];
   activeProvider?: string;
   activeStatus?: StatusTab;
+  initialQuery?: string;
 }) {
   const router = useRouter();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
 
   const byStatus = useMemo(
     () => referrals.filter((r) => (activeStatus === "closed" ? closedKind(r) !== null : isActive(r))),
@@ -36,6 +39,7 @@ export function TrackingTable({
     return byStatus.filter(
       (r) =>
         r.code.toLowerCase().includes(needle) ||
+        (r.mrn ?? "").toLowerCase() === needle ||
         (r.specialist_name ?? "").toLowerCase().includes(needle) ||
         (r.referring_provider_name ?? "").toLowerCase().includes(needle)
     );
@@ -56,7 +60,7 @@ export function TrackingTable({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search code, specialist, provider…"
+          placeholder="Search code, MRN, specialist, provider…"
           className="w-72 max-w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
         />
       </div>
@@ -93,7 +97,10 @@ export function TrackingTable({
                     className="cursor-pointer border-b border-line/70 last:border-0 hover:bg-star/5"
                   >
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <CodeChip code={r.code} />
+                      <div className="flex flex-col items-start gap-1">
+                        <CodeChip code={r.code} />
+                        <StaleChip tag={staleTag(r)} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-ink">{r.referring_provider_name}</td>
                     <td className="px-4 py-3 text-muted">{r.specialist_name || "—"}</td>

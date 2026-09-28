@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </main>
 
       <footer className="px-6 py-4 text-center text-xs text-muted">
-        Operational tracking only · No patient-identifiable information is stored here
+        Operational tracking · MRN is the only patient identifier stored here
       </footer>
     </div>
   );

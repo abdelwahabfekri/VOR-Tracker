@@ -19,16 +19,20 @@ export function TopNav({
   const router = useRouter();
   const [query, setQuery] = useState("");
 
+  // A VOR code jumps straight to the referral; anything else (e.g. an MRN)
+  // searches the tracking list.
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
-    const code = query.trim();
-    if (!code) return;
-    router.push(`/tracking/${code.toUpperCase()}`);
+    const term = query.trim();
+    if (!term) return;
+    if (/^vor-\d+$/i.test(term)) router.push(`/tracking/${term.toUpperCase()}`);
+    else router.push(`/tracking?q=${encodeURIComponent(term)}`);
   }
   const links = [
     ...(isAdmin ? [{ href: "/todo", label: "To-Do", icon: "◔" }] : []),
     { href: "/tracking", label: "Tracking", icon: "◈" },
     { href: "/dashboard", label: "Dashboard", icon: "▤" },
+    ...(isAdmin ? [{ href: "/reports/weekly", label: "Weekly Reports", icon: "✉" }] : []),
   ];
 
   const initials = userName
@@ -74,21 +78,23 @@ export function TopNav({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Jump to tracking code…"
+              placeholder="Tracking code or MRN…"
               className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
             />
           </label>
         </form>
 
-        {/* Right: notifications + new referral (admin) + user */}
+        {/* Right: new referral (admin) + user */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            title="Notifications"
-            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
-          >
-            <span className="text-base leading-none">🔔</span>
-          </button>
+          {isAdmin && (
+            <Link
+              href="/new/existing"
+              title="Add a referral already in progress"
+              className="hidden whitespace-nowrap rounded-full border border-white/20 px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white lg:inline-flex"
+            >
+              Add existing
+            </Link>
+          )}
 
           {isAdmin && (
             <Link

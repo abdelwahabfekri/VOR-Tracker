@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { getMe, getReferralByCode, getHistory } from "@/lib/data";
+import { getMe, getReferralByCode, getHistory, getProviders } from "@/lib/data";
 import { TrackProgress } from "@/components/TrackProgress";
-import { CodeChip, ApptChip, DocChip, AttemptBadge, Card } from "@/components/ui";
-import { CAPS } from "@/lib/statusEngine";
+import { CodeChip, ApptChip, DocChip, AttemptBadge, Card, StaleChip } from "@/components/ui";
+import { CAPS, staleTag } from "@/lib/statusEngine";
+import { AdminTools } from "@/components/AdminTools";
 import { DetailActions } from "@/components/DetailActions";
 import { DeleteReferral } from "@/components/DeleteReferral";
 import { ScanHistory } from "@/components/ScanHistory";
@@ -19,8 +20,11 @@ export default async function ReferralDetail({ params }: { params: { code: strin
 
   const referral = await getReferralByCode(params.code);
   if (!referral) notFound();
-  const history = await getHistory(referral.id);
   const isAdmin = me.role === "admin";
+  const [history, providers] = await Promise.all([
+    getHistory(referral.id),
+    isAdmin ? getProviders() : Promise.resolve([]),
+  ]);
   const dormant = referral.document_state === "awaiting_appointment";
   const checkpointDates = firstReachedMap(history);
   // "Visit done" should show the actual visit date (locked in at confirmation),
@@ -40,9 +44,14 @@ export default async function ReferralDetail({ params }: { params: { code: strin
             <CodeChip code={referral.code} big />
             <span className="text-sm text-muted">Tracking number</span>
           </div>
+          <div className="mt-2 text-sm">
+            <span className="text-muted">MRN </span>
+            <span className="font-mono font-medium text-ink">{referral.mrn ?? "—"}</span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <ApptChip state={referral.appointment_state} />
             <DocChip state={referral.document_state} dormant={dormant} />
+            <StaleChip tag={staleTag(referral)} />
           </div>
         </div>
         <div className="text-right text-sm">
@@ -80,6 +89,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
               <Field label="Opened" value={fmtDateTime(referral.referral_date)} />
               <Field label="Appointment slot" value={referral.appointment_slot ? fmtDateTime(referral.appointment_slot) : null} />
+              <Field label="Next follow-up" value={referral.next_action_due ? fmtDateTime(referral.next_action_due) : null} />
               <Field label="Last update" value={fmtDateTime(referral.last_action_at)} />
               <Field label="Completed" value={referral.completed_at ? fmtDateTime(referral.completed_at) : null} />
               <div>
@@ -97,6 +107,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
             </dl>
           </Card>
 
+          {isAdmin && <AdminTools referral={referral} providers={providers} />}
           {isAdmin && <DeleteReferral referral={referral} />}
         </div>
 
