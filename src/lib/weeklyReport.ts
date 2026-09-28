@@ -208,7 +208,7 @@ function fmtYmd(ymd: string): string {
 }
 
 export function periodLabel(p: ReportPeriod): string {
-  return `${fmtYmd(p.startYmd)} – ${fmtYmd(p.endYmd)} (Eastern Time)`;
+  return `${fmtYmd(p.startYmd)} – ${fmtYmd(p.endYmd)}`;
 }
 
 const INTRO = (p: ReportPeriod) =>

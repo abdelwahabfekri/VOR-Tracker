@@ -120,7 +120,7 @@ export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
                           {e.note_code === "status_corrected" ? "Reason: " : ""}{e.note_text}
                         </p>
                       )}
-                      <div className="num mt-1 text-[10.5px] text-muted">{fmtTime(e.changed_at)} ET</div>
+                      <div className="num mt-1 text-[10.5px] text-muted">{fmtTime(e.changed_at)}</div>
                     </div>
                   </li>
                 );

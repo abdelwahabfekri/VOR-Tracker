@@ -157,7 +157,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
               </select>
             </div>
             <div>
-              <label htmlFor="ex-open" className={label}>Original open date <span className="font-normal text-muted">(ET)</span></label>
+              <label htmlFor="ex-open" className={label}>Original open date</label>
               <input id="ex-open" type="date" className={`${input} num`} value={f.open} max={today()} onChange={(e) => set("open", e.target.value)} required />
             </div>
             <div>
@@ -212,7 +212,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
           <div className="grid gap-5 sm:grid-cols-2">
             {need.slot && (
               <div>
-                <label htmlFor="ex-slot" className={label}>{f.appointment_state === "appointment_completed" ? "Visit date" : "Appointment date"} <span className="font-normal text-muted">(ET)</span></label>
+                <label htmlFor="ex-slot" className={label}>{f.appointment_state === "appointment_completed" ? "Visit date" : "Appointment date"}</label>
                 <input id="ex-slot" type="datetime-local" className={input} value={f.slot} onChange={(e) => set("slot", e.target.value)} required />
               </div>
             )}
@@ -224,7 +224,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
             )}
             {need.closedAt && (
               <div>
-                <label htmlFor="ex-closed" className={label}>Closed date <span className="font-normal text-muted">(ET)</span></label>
+                <label htmlFor="ex-closed" className={label}>Closed date</label>
                 <input id="ex-closed" type="date" className={input} value={f.closed} max={today()} onChange={(e) => set("closed", e.target.value)} required />
               </div>
             )}

@@ -144,7 +144,7 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
           </select>
         </div>
         <div>
-          <label className={label}>Original open date (ET)</label>
+          <label className={label}>Original open date</label>
           <input type="date" className={input} value={f.open} max={isoToNyInput(new Date().toISOString()).slice(0, 10)} onChange={(e) => set("open", e.target.value)} required />
           {f.open !== openYmd && (
             <p className="mt-1 text-xs text-soon">Changing the open date changes aging and the weekly report (NEW THIS WEEK).</p>
@@ -152,7 +152,7 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
         </div>
         {slotEditable && (
           <div>
-            <label className={label}>{referral.appointment_state === "appointment_completed" ? "Visit date" : "Appointment date"} (ET)</label>
+            <label className={label}>{referral.appointment_state === "appointment_completed" ? "Visit date" : "Appointment date"}</label>
             <input type="datetime-local" className={input} value={f.slot} onChange={(e) => set("slot", e.target.value)} required />
             {referral.appointment_state !== "appointment_completed" && f.slot !== (referral.appointment_slot ? isoToNyInput(referral.appointment_slot) : "") && (
               <p className="mt-1 text-xs text-muted">The follow-up call moves with the appointment.</p>
@@ -207,7 +207,7 @@ function SetFollowup({ referral, onDone }: { referral: Referral; onDone: () => v
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>New follow-up (ET)</label>
+          <label className={label}>New follow-up</label>
           <input type="datetime-local" className={input} value={due} onChange={(e) => { setDue(e.target.value); setConfirmPast(false); }} required />
         </div>
         <div>
@@ -296,13 +296,13 @@ function CorrectStatus({ referral, onDone }: { referral: Referral; onDone: () =>
         </div>
         {track === "appointment" && NEEDS_SLOT.includes(to as AppointmentStatus) && (
           <div>
-            <label className={label}>{to === "appointment_completed" ? "Visit date" : "Appointment date"} (ET)</label>
+            <label className={label}>{to === "appointment_completed" ? "Visit date" : "Appointment date"}</label>
             <input type="datetime-local" className={input} value={slot} onChange={(e) => setSlot(e.target.value)} required />
           </div>
         )}
         {track === "appointment" && to === "appointment_completed" && (
           <div>
-            <label className={label}>Completed on (ET, optional — defaults to the visit date)</label>
+            <label className={label}>Completed on (optional — defaults to the visit date)</label>
             <input type="datetime-local" className={input} value={completed} onChange={(e) => setCompleted(e.target.value)} />
           </div>
         )}

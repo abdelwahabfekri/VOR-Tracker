@@ -545,13 +545,13 @@ grant execute on function create_referral(jsonb, jsonb) to authenticated;
 -- ============================================================================
 -- 11. SEED — referring providers (Last,First)
 -- ============================================================================
-insert into referring_providers (name) values
-  ('Akilov,Sarah'),
-  ('Berger,Zvi'),
-  ('Goldberg,Joel B.'),
-  ('Herbik,Max'),
-  ('Klein,Solomon'),
-  ('Sheth,Shaily')
+insert into referring_providers (name, report_email) values
+  ('Akilov,Sarah',     'sakilov@aizerhealth.org'),
+  ('Berger,Zvi',       'zberger@aizerhealth.org'),
+  ('Goldberg,Joel B.', 'jgoldberg@echckj.org'),
+  ('Herbik,Max',       'mherbik@aizerhealth.org'),
+  ('Klein,Solomon',    'sklein@aizerhealth.org'),
+  ('Sheth,Shaily',     'ssheth@aizerhealth.org')
 on conflict (name) do nothing;
 
 -- ----------------------------------------------------------------------------

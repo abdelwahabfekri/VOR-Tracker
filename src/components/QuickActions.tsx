@@ -131,7 +131,7 @@ export function QuickActions({
         open={prompt === "book" || prompt === "reschedule"}
         onClose={() => setPrompt(null)}
         title={prompt === "reschedule" ? "Reschedule appointment" : "Book appointment"}
-        description="Date and time are Eastern Time. The confirmation call is scheduled 24 hours before."
+        description="The confirmation call is scheduled 24 hours before the appointment."
       >
         <SlotForm
           confirmLabel={prompt === "reschedule" ? "Save new date" : "Book appointment"}
@@ -200,7 +200,7 @@ function SlotForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="field-label" htmlFor="slot-when">Date and time <span className="font-normal text-muted">(ET)</span></label>
+        <label className="field-label" htmlFor="slot-when">Date and time</label>
         <input id="slot-when" type="datetime-local" value={val} onChange={(e) => { setVal(e.target.value); setAckPast(false); }} className="field" required autoFocus />
       </div>
       <div>

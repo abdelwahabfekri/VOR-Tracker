@@ -96,11 +96,11 @@ export function WeeklyReportView(props: {
             </select>
           </div>
           <div>
-            <label htmlFor="wr-from" className="field-label">From <span className="font-normal text-muted">(ET)</span></label>
+            <label htmlFor="wr-from" className="field-label">From</label>
             <input id="wr-from" type="date" value={props.startYmd} max={props.endYmd} onChange={(e) => e.target.value && go({ start: e.target.value })} className="field num" />
           </div>
           <div>
-            <label htmlFor="wr-to" className="field-label">To <span className="font-normal text-muted">(ET)</span></label>
+            <label htmlFor="wr-to" className="field-label">To</label>
             <input id="wr-to" type="date" value={props.endYmd} max={props.todayYmd} onChange={(e) => e.target.value && go({ end: e.target.value })} className="field num" />
           </div>
         </div>

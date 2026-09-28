@@ -82,7 +82,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
           </div>
           <div>
             <label htmlFor="nr-date" className="field-label">
-              Referral opened <span className="font-normal text-muted">(Eastern Time)</span>
+              Referral opened
             </label>
             <input id="nr-date" type="date" value={form.referral_date} onChange={(e) => set("referral_date", e.target.value)} className="field num" required />
           </div>
