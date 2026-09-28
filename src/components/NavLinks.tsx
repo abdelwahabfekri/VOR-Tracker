@@ -70,13 +70,7 @@ export function TopNav({
 
         {/* Right: new referral (admin) + user */}
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {isAdmin && (
-            <Link href="/new" className="btn btn-star rounded-full px-3 sm:px-3.5">
-              <Icon name="plus" className="h-4 w-4" strokeWidth={2.4} />
-              <span className="hidden sm:inline">New referral</span>
-              <span className="sr-only sm:hidden">New referral</span>
-            </Link>
-          )}
+          {isAdmin && <NewReferralMenu />}
           <UserMenu userName={userName} userRole={userRole} isAdmin={isAdmin} />
           <button
             type="button"
@@ -106,17 +100,68 @@ export function TopNav({
                   {l.label}
                 </Link>
               ))}
-              {isAdmin && (
-                <Link href="/new/existing" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/75 hover:bg-white/5">
-                  <Icon name="history" className="h-4 w-4 text-star-400" />
-                  Add existing referral
-                </Link>
-              )}
             </div>
           </nav>
         )}
       </div>
     </header>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// New referral — one button, two choices: a brand-new referral, or one that
+// is already in progress (entered at its current stage).
+// ---------------------------------------------------------------------------
+function NewReferralMenu() {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); btn.current?.focus(); } };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const item = "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-canvas focus-visible:bg-canvas focus-visible:outline-none";
+
+  return (
+    <div ref={box} className="relative">
+      <button
+        ref={btn}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="btn btn-star rounded-full px-3 sm:px-3.5"
+      >
+        <Icon name="plus" className="h-4 w-4" strokeWidth={2.4} />
+        <span className="hidden sm:inline">New referral</span>
+        <span className="sr-only sm:hidden">New referral</span>
+        <Icon name="chevronDown" className={`hidden h-3.5 w-3.5 transition-transform duration-fast sm:block ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-72 animate-fade-up rounded-2xl border border-line bg-white p-2 text-ink shadow-overlay">
+          <Link href="/new" role="menuitem" onClick={() => setOpen(false)} className={item}>
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-star/10 text-star"><Icon name="plus" className="h-4 w-4" strokeWidth={2.2} /></span>
+            <span>
+              <span className="block text-sm font-semibold">New referral</span>
+              <span className="block text-xs text-muted">Start tracking and generate a VOR code</span>
+            </span>
+          </Link>
+          <Link href="/new/existing" role="menuitem" onClick={() => setOpen(false)} className={item}>
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy/5 text-navy"><Icon name="history" className="h-4 w-4" /></span>
+            <span>
+              <span className="block text-sm font-semibold">Existing referral</span>
+              <span className="block text-xs text-muted">Already in progress — add it at its current stage</span>
+            </span>
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -166,12 +211,6 @@ function UserMenu({ userName, userRole, isAdmin }: { userName: string; userRole:
             </div>
           </div>
           <div className="my-1 h-px bg-line" />
-          {isAdmin && (
-            <Link href="/new/existing" role="menuitem" onClick={() => setOpen(false)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink hover:bg-canvas">
-              <Icon name="history" className="h-4 w-4 text-muted" />
-              Add existing referral
-            </Link>
-          )}
           <form action={signOut}>
             <button type="submit" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink hover:bg-canvas">
               <Icon name="logout" className="h-4 w-4 text-muted" />

@@ -69,7 +69,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
       <DetailActions referral={referral} isAdmin={isAdmin} />
 
       {/* 4. Specialist + operational details */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
         <Card className="p-5 md:p-6">
           <SectionHeading title="Specialist" icon="user" eyebrow="Destination" />
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
@@ -101,7 +101,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
 
       {/* 5–6. Calls & notes | activity timeline */}
       <div className="grid gap-6 lg:grid-cols-5">
-        <div className="space-y-6 lg:col-span-3">
+        <div className="min-w-0 space-y-6 lg:col-span-3">
           <Card className="p-5 md:p-6">
             <SectionHeading title="Call log" icon="phone" />
             <CallLogTable entries={history} />
@@ -111,7 +111,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
             <NotesSection entries={history} />
           </Card>
         </div>
-        <Card className="p-5 md:p-6 lg:col-span-2">
+        <Card className="min-w-0 p-5 md:p-6 lg:col-span-2">
           <SectionHeading title="Activity timeline" icon="history" />
           <ScanHistory entries={history} />
         </Card>
