@@ -9,7 +9,7 @@ import { APPT_LABEL, DOC_LABEL, isReferralClosed } from "./types";
 import { isoToNyInput, nyInputToIso, fmtDate } from "./tz";
 
 export type ActivityTag = "NEW THIS WEEK" | "UPDATED THIS WEEK" | "NO CHANGE THIS WEEK";
-export type FollowupTag = "OVERDUE" | "DUE SOON" | "ON TRACK" | "CLOSED";
+export type FollowupTag = "OVERDUE" | "DUE SOON" | "ON TRACK" | "PATIENT UNREACHABLE" | "CLOSED";
 
 export interface ReportPeriod {
   startYmd: string; // first day, Eastern
@@ -104,6 +104,8 @@ export function activityTag(r: Referral, periodEvents: StatusHistoryEntry[], p: 
 
 export function followupTag(r: Referral, now: Date = new Date()): FollowupTag {
   if (isReferralClosed(r)) return "CLOSED";
+  // Parked after the contact cap: no due date, but it is not "on track".
+  if (r.appointment_state === "patient_not_replying") return "PATIENT UNREACHABLE";
   if (!r.next_action_due) return "ON TRACK";
   const due = new Date(r.next_action_due).getTime();
   if (due <= now.getTime()) return "OVERDUE";
@@ -216,7 +218,9 @@ const EMPTY = "There are no active referrals, and no referral changed or closed 
 const LEGEND_ACTIVITY =
   "Weekly activity — NEW THIS WEEK: opened during the period. UPDATED THIS WEEK: status changed during the period. NO CHANGE THIS WEEK: no status change during the period.";
 const LEGEND_FOLLOWUP =
-  "Follow-up — OVERDUE: next follow-up is past due. DUE SOON: due within 24 hours. ON TRACK: next step is scheduled. CLOSED: the referral reached a final status.";
+  "Follow-up — OVERDUE: next follow-up is past due. DUE SOON: due within 24 hours. ON TRACK: next step is scheduled. " +
+  "PATIENT UNREACHABLE: the patient could not be reached after the maximum number of attempts; review needed. " +
+  "CLOSED: the referral reached a final status.";
 const CLOSING = ["Please reply to this email with any questions.", "", "Thank you,", "Vision Department"];
 
 export interface ReportOptions {
@@ -262,6 +266,7 @@ const TAG_STYLE: Record<ActivityTag | FollowupTag, string> = {
   "UPDATED THIS WEEK": "background:#E4EFEA;color:#2E7D5B;",
   "NO CHANGE THIS WEEK": "background:#EEF1F5;color:#4A5563;",
   OVERDUE: "background:#FBEAE8;color:#C0392B;",
+  "PATIENT UNREACHABLE": "background:#FBEAE8;color:#C0392B;", // same as overdue: needs attention
   "DUE SOON": "background:#FBF1E1;color:#8A5A0B;",
   "ON TRACK": "background:#E4EFEA;color:#2E7D5B;",
   CLOSED: "background:#EEF1F5;color:#4A5563;",

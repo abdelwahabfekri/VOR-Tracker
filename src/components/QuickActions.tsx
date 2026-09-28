@@ -4,265 +4,256 @@ import { useState } from "react";
 import type { Referral } from "@/lib/types";
 import type { Action } from "@/lib/statusEngine";
 import { isoToNyInput, nyInputToIso } from "@/lib/tz";
+import { Dialog } from "@/components/Dialog";
+import { Icon } from "@/components/Icon";
+import { Spinner } from "@/components/ui";
 
 // Presents only the actions that make sense for the referral's current state
-// (the server re-checks every one). Every action can carry an optional
-// free-text note, stored on its status_history entry and shown to admins and
-// to doctors allowed to see the referral.
+// (the server re-checks every one). One primary action, the rest secondary.
+// Every action can carry an optional free-text note, stored on its
+// status_history entry and shown to admins and to doctors allowed to see the
+// referral.
 //   onAction resolves true on success; typed input is kept on failure so the
 //   user can retry.
+type Prompt = null | "book" | "reschedule" | "decline" | "followup";
+
+type Btn = {
+  label: string;
+  kind: "primary" | "secondary" | "danger";
+  run: () => void;
+};
+
 export function QuickActions({
   referral,
   onAction,
   disabled,
+  compact,
 }: {
   referral: Referral;
   onAction: (a: Action, note?: string) => Promise<boolean>;
   disabled?: boolean;
+  compact?: boolean;
 }) {
-  const [slotOpen, setSlotOpen] = useState<null | "book" | "reschedule" | "decline" | "followup">(null);
+  const [prompt, setPrompt] = useState<Prompt>(null);
   const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
   const a = referral.appointment_state;
   const d = referral.document_state;
 
-  const btn =
-    "rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50";
-  const primary = `${btn} bg-navy text-white hover:bg-navy-700`;
-  const ghost = `${btn} border border-line text-navy hover:border-star`;
-  const danger = `${btn} border border-overdue/30 text-overdue hover:bg-overdue-soft`;
-
   // Fire an instant action using whatever note is currently typed; clear it on success.
-  async function fire(action: Action) {
-    if (await onAction(action, note.trim() || undefined)) setNote("");
+  async function fire(label: string, action: Action) {
+    setBusy(label);
+    const ok = await onAction(action, note.trim() || undefined);
+    setBusy(null);
+    if (ok) setNote("");
   }
 
   // Close an open prompt only once its action succeeded.
-  async function fromPrompt(action: Action, n?: string) {
-    if (await onAction(action, n)) setSlotOpen(null);
+  async function fromPrompt(action: Action, n?: string): Promise<boolean> {
+    const ok = await onAction(action, n);
+    if (ok) setPrompt(null);
+    return ok;
   }
 
-  const noteField = (
-    <input
-      type="text"
-      value={note}
-      onChange={(e) => setNote(e.target.value)}
-      placeholder="Add a note (optional)"
-      className="w-full min-w-[200px] rounded-lg border border-line px-2.5 py-1.5 text-xs outline-none focus:border-star sm:w-56"
-    />
-  );
+  const instant = (label: string, kind: Btn["kind"], action: Action): Btn => ({ label, kind, run: () => fire(label, action) });
+  const open = (label: string, kind: Btn["kind"], p: Exclude<Prompt, null>): Btn => ({ label, kind, run: () => setPrompt(p) });
 
-  // Track 1 — scheduling phase
+  let buttons: Btn[] = [];
   if (a === "referral_created" || a === "patient_contacted" || a === "awaiting_booking") {
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => setSlotOpen("book")}>Booked</button>
-        <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "awaiting_booking" })}>Awaiting booking</button>
-        <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "log_no_answer" })}>No answer</button>
-        <button className={danger} disabled={disabled} onClick={() => setSlotOpen("decline")}>Declined</button>
-        {noteField}
-        {slotOpen === "book" && (
-          <SlotPrompt
-            onPick={(slot, n) => fromPrompt({ kind: "book_appointment", slot }, n)}
-            onCancel={() => setSlotOpen(null)}
-          />
-        )}
-        {slotOpen === "decline" && (
-          <ReasonPrompt
-            label="Reason"
-            confirmLabel="Confirm decline"
-            onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
-            onCancel={() => setSlotOpen(null)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Track 1 — pre-appointment confirmation. Once the slot has passed without a
-  // confirmation (pre-call unanswered), the post-visit outcomes are offered too.
-  if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
+    buttons = [
+      open("Booked", "primary", "book"),
+      instant("Awaiting booking", "secondary", { kind: "awaiting_booking" }),
+      instant("No answer", "secondary", { kind: "log_no_answer" }),
+      open("Declined", "danger", "decline"),
+    ];
+  } else if (a === "appointment_scheduled" || a === "appointment_rescheduled") {
+    // Once the slot has passed without a confirmation (pre-call unanswered),
+    // the post-visit outcomes are offered instead.
     const slotPassed = !!referral.appointment_slot && new Date(referral.appointment_slot).getTime() <= Date.now();
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        {slotPassed ? (
-          <>
-            <button className={primary} disabled={disabled} onClick={() => fire({ kind: "mark_completed" })}>Visit done</button>
-            <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "mark_no_show" })}>No-show</button>
-          </>
-        ) : (
-          <>
-            <button className={primary} disabled={disabled} onClick={() => fire({ kind: "confirm_attendance" })}>Confirmed</button>
-            <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "precall_no_answer" })}>No answer</button>
-          </>
-        )}
-        <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("reschedule")}>Reschedule</button>
-        {noteField}
-
-        {slotOpen === "reschedule" && (
-          <SlotPrompt
-            onPick={(slot, n) => fromPrompt({ kind: "reschedule", slot }, n)}
-            onCancel={() => setSlotOpen(null)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Track 1 — post-appointment check
-  if (a === "appointment_confirmed") {
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => fire({ kind: "mark_completed" })}>Visit done</button>
-        <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("reschedule")}>Rescheduled</button>
-        <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "mark_no_show" })}>No-show</button>
-        {noteField}
-        {slotOpen === "reschedule" && (
-          <SlotPrompt
-            onPick={(slot, n) => fromPrompt({ kind: "reschedule", slot }, n)}
-            onCancel={() => setSlotOpen(null)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Parked — unreachable patient
-  if (a === "patient_not_replying") {
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <button className={primary} disabled={disabled} onClick={() => fire({ kind: "reopen_contact" })}>Re-engage</button>
-        <button className={danger} disabled={disabled} onClick={() => fire({ kind: "cancel" })}>Cancel</button>
-        {noteField}
-      </div>
-    );
-  }
-
-  // Track 2 — documents
-  if (a === "appointment_completed") {
+    buttons = slotPassed
+      ? [instant("Visit done", "primary", { kind: "mark_completed" }), instant("No-show", "secondary", { kind: "mark_no_show" })]
+      : [instant("Confirmed", "primary", { kind: "confirm_attendance" }), instant("No answer", "secondary", { kind: "precall_no_answer" })];
+    buttons.push(open("Reschedule", "secondary", "reschedule"));
+  } else if (a === "appointment_confirmed") {
+    buttons = [
+      instant("Visit done", "primary", { kind: "mark_completed" }),
+      open("Rescheduled", "secondary", "reschedule"),
+      instant("No-show", "secondary", { kind: "mark_no_show" }),
+    ];
+  } else if (a === "patient_not_replying") {
+    buttons = [instant("Re-engage", "primary", { kind: "reopen_contact" }), instant("Cancel referral", "danger", { kind: "cancel" })];
+  } else if (a === "appointment_completed") {
     if (d === "records_request_due") {
       // "Records requested" only once the office was actually reached and asked.
       // Couldn't reach them -> set when to try again; the status stays.
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className={primary} disabled={disabled} onClick={() => fire({ kind: "records_requested" })}>Records requested</button>
-          <button className={ghost} disabled={disabled} onClick={() => setSlotOpen("followup")}>Couldn’t reach — set follow-up</button>
-          {noteField}
-          {slotOpen === "followup" && (
-            <SlotPrompt
-              confirmLabel="Set follow-up"
-              onPick={(due, n) => {
-                // a past date makes the referral overdue immediately — confirm first
-                if (new Date(due).getTime() < Date.now() && !window.confirm("That date is in the past — the referral will show as overdue right away. Continue?")) return;
-                fromPrompt({ kind: "set_followup", due }, n);
-              }}
-              onCancel={() => setSlotOpen(null)}
-            />
-          )}
-        </div>
-      );
-    }
-    if (d === "documents_requested") {
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className={primary} disabled={disabled} onClick={() => fire({ kind: "doc_received" })}>Records in</button>
-          <button className={ghost} disabled={disabled} onClick={() => fire({ kind: "doc_chase_no_response" })}>No response</button>
-          {noteField}
-        </div>
-      );
-    }
-    if (d === "documents_received") {
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className={primary} disabled={disabled} onClick={() => fire({ kind: "doc_uploaded" })}>Uploaded to eCW</button>
-          {noteField}
-        </div>
-      );
-    }
-    if (d === "documents_uploaded") {
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className={primary} disabled={disabled} onClick={() => fire({ kind: "close" })}>Close referral</button>
-          {noteField}
-        </div>
-      );
+      buttons = [
+        instant("Records requested", "primary", { kind: "records_requested" }),
+        open("Couldn’t reach — set follow-up", "secondary", "followup"),
+      ];
+    } else if (d === "documents_requested") {
+      buttons = [instant("Records in", "primary", { kind: "doc_received" }), instant("No response", "secondary", { kind: "doc_chase_no_response" })];
+    } else if (d === "documents_received") {
+      buttons = [instant("Uploaded to eCW", "primary", { kind: "doc_uploaded" })];
+    } else if (d === "documents_uploaded") {
+      buttons = [instant("Close referral", "primary", { kind: "close" })];
     }
   }
 
-  return <span className="text-xs text-muted">No action</span>;
-}
+  if (buttons.length === 0) return <span className="text-xs text-muted">No action</span>;
 
-function SlotPrompt({
-  onPick,
-  onCancel,
-  initial = "",
-  confirmLabel = "Set",
-}: {
-  onPick: (slot: string, note?: string) => void;
-  onCancel: () => void;
-  initial?: string;   // ISO string to prefill (confirmation case)
-  confirmLabel?: string;
-}) {
-  const [val, setVal] = useState(initial ? isoToNyInput(initial) : "");
-  const [note, setNote] = useState("");
+  const cls: Record<Btn["kind"], string> = {
+    primary: "btn btn-primary",
+    secondary: "btn btn-secondary",
+    danger: "btn btn-danger",
+  };
+  const size = compact ? "btn-sm" : "";
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
+      {buttons.map((b) => (
+        <button key={b.label} className={`${cls[b.kind]} ${size}`} disabled={disabled} onClick={b.run}>
+          {busy === b.label && <Spinner className="h-3.5 w-3.5" />}
+          {b.label}
+          {b.kind === "primary" && busy !== b.label && <Icon name="arrowRight" className="btn-icon h-3.5 w-3.5" />}
+        </button>
+      ))}
+      <label className="sr-only" htmlFor={`note-${referral.id}`}>Note for this action (optional)</label>
       <input
-        type="datetime-local"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        className="rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-star"
-      />
-      <span className="text-[10px] font-medium text-muted" title="Eastern Time">ET</span>
-      <input
+        id={`note-${referral.id}`}
         type="text"
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Add a note (optional)"
-        className="w-44 rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-star"
+        className={`field ${compact ? "field-sm" : "py-2"} w-full min-w-[180px] sm:w-56`}
       />
-      <button
-        className="rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
-        disabled={!val}
-        onClick={() => onPick(nyInputToIso(val), note.trim() || undefined)}
+
+      <Dialog
+        open={prompt === "book" || prompt === "reschedule"}
+        onClose={() => setPrompt(null)}
+        title={prompt === "reschedule" ? "Reschedule appointment" : "Book appointment"}
+        description="Date and time are Eastern Time. The confirmation call is scheduled 24 hours before."
       >
-        {confirmLabel}
-      </button>
-      <button className="text-xs text-muted hover:text-ink" onClick={onCancel}>✕</button>
+        <SlotForm
+          confirmLabel={prompt === "reschedule" ? "Save new date" : "Book appointment"}
+          onPick={(slot, n) => fromPrompt(prompt === "reschedule" ? { kind: "reschedule", slot } : { kind: "book_appointment", slot }, n)}
+          onCancel={() => setPrompt(null)}
+        />
+      </Dialog>
+
+      <Dialog
+        open={prompt === "followup"}
+        onClose={() => setPrompt(null)}
+        title="Set next follow-up"
+        description="The records status stays “Records request needed”; only the follow-up date moves."
+      >
+        <SlotForm
+          confirmLabel="Set follow-up"
+          warnPast
+          onPick={(due, n) => fromPrompt({ kind: "set_followup", due }, n)}
+          onCancel={() => setPrompt(null)}
+        />
+      </Dialog>
+
+      <Dialog
+        open={prompt === "decline"}
+        onClose={() => setPrompt(null)}
+        title="Patient declined"
+        description="This closes the referral as Declined. It can be undone later only with Correct status."
+      >
+        <ReasonForm
+          confirmLabel="Confirm decline"
+          onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
+          onCancel={() => setPrompt(null)}
+        />
+      </Dialog>
     </div>
   );
 }
 
-function ReasonPrompt({
+function SlotForm({
+  onPick,
+  onCancel,
+  initial = "",
+  confirmLabel = "Set",
+  warnPast,
+}: {
+  onPick: (slot: string, note?: string) => Promise<boolean>;
+  onCancel: () => void;
+  initial?: string;
+  confirmLabel?: string;
+  warnPast?: boolean;
+}) {
+  const [val, setVal] = useState(initial ? isoToNyInput(initial) : "");
+  const [note, setNote] = useState("");
+  const [ackPast, setAckPast] = useState(false);
+  const [pending, setPending] = useState(false);
+  const inPast = warnPast && !!val && new Date(nyInputToIso(val)).getTime() < Date.now();
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!val || (inPast && !ackPast)) return;
+    setPending(true);
+    await onPick(nyInputToIso(val), note.trim() || undefined);
+    setPending(false);
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <div>
+        <label className="field-label" htmlFor="slot-when">Date and time <span className="font-normal text-muted">(ET)</span></label>
+        <input id="slot-when" type="datetime-local" value={val} onChange={(e) => { setVal(e.target.value); setAckPast(false); }} className="field" required autoFocus />
+      </div>
+      <div>
+        <label className="field-label" htmlFor="slot-note">Note <span className="font-normal text-muted">(optional)</span></label>
+        <input id="slot-note" type="text" value={note} onChange={(e) => setNote(e.target.value)} className="field" placeholder="e.g. Office asked to call back Monday" />
+      </div>
+      {inPast && (
+        <label className="flex items-center gap-2 rounded-ctl bg-soon-soft px-3 py-2 text-sm text-soon">
+          <input type="checkbox" checked={ackPast} onChange={(e) => setAckPast(e.target.checked)} />
+          That date is in the past — the referral will show as overdue right away.
+        </label>
+      )}
+      <div className="flex justify-end gap-2 pt-1">
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-primary" disabled={!val || pending || (inPast && !ackPast)}>
+          {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function ReasonForm({
   onConfirm,
   onCancel,
-  label,
   confirmLabel = "Confirm",
 }: {
-  onConfirm: (reason?: string) => void;
+  onConfirm: (reason?: string) => Promise<boolean>;
   onCancel: () => void;
-  label: string;
   confirmLabel?: string;
 }) {
   const [reason, setReason] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setPending(true);
+    await onConfirm(reason.trim() || undefined);
+    setPending(false);
+  }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <input
-        type="text"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder={`${label} (optional)`}
-        className="w-56 rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-star"
-        autoFocus
-      />
-      <button
-        className="rounded-lg bg-overdue px-2.5 py-1.5 text-xs font-semibold text-white"
-        onClick={() => onConfirm(reason.trim() || undefined)}
-      >
-        {confirmLabel}
-      </button>
-      <button className="text-xs text-muted hover:text-ink" onClick={onCancel}>✕</button>
-    </div>
+    <form onSubmit={submit} className="space-y-4">
+      <div>
+        <label className="field-label" htmlFor="reason">Reason <span className="font-normal text-muted">(optional)</span></label>
+        <input id="reason" type="text" value={reason} onChange={(e) => setReason(e.target.value)} className="field" autoFocus />
+      </div>
+      <div className="flex justify-end gap-2 pt-1">
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-danger-solid" disabled={pending}>
+          {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
+        </button>
+      </div>
+    </form>
   );
 }

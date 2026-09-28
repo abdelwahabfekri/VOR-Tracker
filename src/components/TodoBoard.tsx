@@ -5,11 +5,24 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Referral, ReferringProvider } from "@/lib/types";
 import { urgency, nextActionLabel, staleTag, CAPS, type Action } from "@/lib/statusEngine";
+import { missionIcon } from "@/lib/journey";
 import { performAction } from "@/lib/actions";
 import { QuickActions } from "@/components/QuickActions";
-import { CodeChip, AttemptBadge, Card, StaleChip } from "@/components/ui";
+import { CodeChip, AttemptBadge, Card, StaleChip, Mrn, EmptyState } from "@/components/ui";
+import { Icon, type IconName } from "@/components/Icon";
+import { toast } from "@/components/Toast";
 import { ProviderFilter } from "@/components/ProviderFilter";
 import { fmtShortDate } from "@/lib/tz";
+
+// Cap / review signals still need saying; routine success does not — the
+// card simply leaves the list.
+const FLAG_TEXT: Record<string, string> = {
+  reschedule_cap_review: "Reschedule limit reached — flagged for review.",
+  parked_not_replying: "Moved to ‘Unable to reach patient’ — review needed.",
+  documents_unavailable: "Marked records unavailable.",
+};
+
+type Tone = "overdue" | "soon" | "muted";
 
 export function TodoBoard({
   referrals,
@@ -22,7 +35,9 @@ export function TodoBoard({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
+  // cards fading out after a confirmed action; keyed by version so a card
+  // that comes back after the refresh (e.g. moved to Upcoming) shows again
+  const [leaving, setLeaving] = useState<Set<string>>(new Set());
 
   // only referrals with a due action, sorted by urgency then due date
   const actionable = useMemo(() => {
@@ -47,131 +62,133 @@ export function TodoBoard({
     setPending(false);
     if (!res.ok) {
       // stays up until dismissed — a failed action must not look like it worked
-      setToast({ ok: false, text: res.error ?? "Could not save. Try again." });
+      toast(res.error ?? "Could not save. Try again.", "error");
       return false;
     }
-    const text =
-      res.flag === "reschedule_cap_review" ? "Reschedule limit reached — flagged for review."
-      : res.flag === "parked_not_replying" ? "Moved to ‘Unable to reach patient’."
-      : res.flag === "documents_unavailable" ? "Marked records unavailable."
-      : "Logged.";
-    setToast({ ok: true, text });
-    router.refresh();
-    setTimeout(() => setToast(null), 2500);
+    if (res.flag && FLAG_TEXT[res.flag]) toast(FLAG_TEXT[res.flag], "warning");
+    setLeaving((s) => new Set(s).add(`${r.id}:${r.updated_at}`));
+    setTimeout(() => router.refresh(), 260);
     return true;
   }
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <Card className="mb-6 flex flex-wrap items-center justify-between gap-4 p-3 pl-4">
         <ProviderFilter providers={providers} active={activeProvider} basePath="/todo" />
-        <div className="flex items-center gap-4 text-sm">
-          <Stat n={overdue.length} label="Overdue" tone="text-overdue" />
-          <Stat n={soon.length} label="Due soon" tone="text-soon" />
-          <Stat n={upcoming.length} label="Upcoming" tone="text-muted" />
+        <div className="flex items-center gap-2">
+          <Stat n={overdue.length} label="Overdue" cls="bg-overdue-soft text-overdue" />
+          <Stat n={soon.length} label="Due soon" cls="bg-soon-soft text-soon" />
+          <Stat n={upcoming.length} label="Upcoming" cls="bg-slate-soft text-slate" />
         </div>
-      </div>
+      </Card>
 
       {actionable.length === 0 && (
-        <Card className="p-10 text-center">
-          <div className="text-3xl">✓</div>
-          <p className="mt-2 font-medium text-ink">Nothing due right now.</p>
-          <p className="text-sm text-muted">New actions will appear here as referrals move through their stages.</p>
+        <Card>
+          <EmptyState icon="check" title="All caught up">
+            Nothing is due right now. New calls and record chases will appear here as they come due.
+          </EmptyState>
         </Card>
       )}
 
-      <Section title="Overdue" items={overdue} run={run} pending={pending} tone="overdue" />
-      <Section title="Due soon" items={soon} run={run} pending={pending} tone="soon" />
-      <Section title="Upcoming" items={upcoming} run={run} pending={pending} tone="muted" />
-
-      {toast && (
-        <div
-          role={toast.ok ? "status" : "alert"}
-          className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-white shadow-pop ${toast.ok ? "bg-navy" : "bg-overdue"}`}
-        >
-          {toast.text}
-          {!toast.ok && (
-            <button onClick={() => setToast(null)} className="text-white/80 hover:text-white" aria-label="Dismiss">✕</button>
-          )}
-        </div>
-      )}
+      <Section title="Overdue" icon="alert" items={overdue} run={run} pending={pending} tone="overdue" leaving={leaving} />
+      <Section title="Due soon" icon="clock" items={soon} run={run} pending={pending} tone="soon" leaving={leaving} />
+      <Section title="Upcoming" icon="calendar" items={upcoming} run={run} pending={pending} tone="muted" leaving={leaving} />
     </div>
   );
 }
 
-function Stat({ n, label, tone }: { n: number; label: string; tone: string }) {
+function Stat({ n, label, cls }: { n: number; label: string; cls: string }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className={`text-lg font-bold ${tone}`}>{n}</span>
-      <span className="text-muted">{label}</span>
+    <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${cls}`}>
+      <span className="num text-base font-bold">{n}</span>
+      <span className="text-xs font-medium">{label}</span>
     </div>
   );
 }
+
+const HEAD: Record<Tone, string> = {
+  overdue: "from-overdue-soft to-transparent text-overdue border-overdue/15",
+  soon: "from-soon-soft to-transparent text-soon border-soon/15",
+  muted: "from-slate-soft to-transparent text-slate border-line",
+};
 
 function Section({
-  title, items, run, pending, tone,
+  title, icon, items, run, pending, tone, leaving,
 }: {
   title: string;
+  icon: IconName;
   items: { r: Referral }[];
   run: (r: Referral, a: Action, note?: string) => Promise<boolean>;
   pending: boolean;
-  tone: "overdue" | "soon" | "muted";
+  tone: Tone;
+  leaving: Set<string>;
 }) {
   if (items.length === 0) return null;
-  const bar = tone === "overdue" ? "text-overdue" : tone === "soon" ? "text-soon" : "text-muted";
   return (
-    <div className="mb-7">
-      <h2 className={`mb-2 text-sm font-semibold uppercase tracking-wide ${bar}`}>
-        {title} · {items.length}
+    <section className="mb-8" aria-labelledby={`todo-${tone}`}>
+      <h2
+        id={`todo-${tone}`}
+        className={`mb-3 flex items-center gap-2 rounded-ctl border bg-gradient-to-r px-3.5 py-2 text-sm font-semibold ${HEAD[tone]}`}
+      >
+        <Icon name={icon} className="h-4 w-4" />
+        {title}
+        <span className="num ml-1 rounded-full bg-white/80 px-2 text-xs">{items.length}</span>
       </h2>
-      <div className="space-y-2.5">
-        {items.map(({ r }) => (
-          <Card key={r.id} className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <CodeChip code={r.code} />
-                  <span className="text-sm text-muted">{r.referring_provider_name}</span>
-                  <StaleChip tag={staleTag(r)} />
+      <ul className="space-y-3">
+        {items.map(({ r }) => {
+          const out = leaving.has(`${r.id}:${r.updated_at}`);
+          const records = r.appointment_state === "appointment_completed";
+          return (
+            <li key={r.id} className={`transition ${out ? "collapse-out" : "animate-fade-up"}`} aria-hidden={out || undefined}>
+              <Card className="p-4" tone={tone === "overdue" ? "overdue" : tone === "soon" ? "soon" : "plain"}>
+                <div className="flex flex-wrap items-start gap-4">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white ${records ? "bg-track-docs" : "bg-track-appt"}`}>
+                    <Icon name={missionIcon(r)} className="h-[18px] w-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink">{nextActionLabel(r)}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-muted">MRN</span> <Mrn value={r.mrn} className="text-xs" />
+                      </span>
+                      <CodeChip code={r.code} />
+                      <span>{r.referring_provider_name}</span>
+                      {r.specialist_name && <span>· {r.specialist_name}</span>}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <span className={`inline-flex items-center gap-1 font-medium ${tone === "overdue" ? "text-overdue" : tone === "soon" ? "text-soon" : "text-muted"}`}>
+                        <Icon name="clock" className="h-3.5 w-3.5" />
+                        Due {fmtDue(r.next_action_due)}
+                      </span>
+                      {(r.appointment_state === "referral_created" || r.appointment_state === "patient_contacted" || r.appointment_state === "awaiting_booking") && (
+                        <AttemptBadge n={r.contact_attempts} cap={CAPS.contact} label="Contact attempts" long />
+                      )}
+                      {r.document_state === "documents_requested" && (
+                        <AttemptBadge n={r.document_attempts} cap={CAPS.document} label="Chase attempts" long />
+                      )}
+                      <StaleChip tag={staleTag(r)} />
+                    </div>
+                  </div>
+                  <Link href={`/tracking/${r.code}`} className="btn btn-ghost btn-sm shrink-0">
+                    Open <Icon name="chevronRight" className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="font-medium text-ink">{nextActionLabel(r)}</span>
-                  {r.specialist_name && (
-                    <span className="text-sm text-muted">· {r.specialist_name}</span>
-                  )}
+                <div className="mt-3 border-t border-line/70 pt-3">
+                  <QuickActions referral={r} onAction={(a, note) => run(r, a, note)} disabled={pending || out} compact />
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-xs text-muted">
-                  <span>Due {fmtDue(r.next_action_due)}</span>
-                  {(r.appointment_state === "referral_created" || r.appointment_state === "patient_contacted" || r.appointment_state === "awaiting_booking") && (
-                    <AttemptBadge n={r.contact_attempts} cap={CAPS.contact} label="Contact attempts" />
-                  )}
-                  {r.document_state === "documents_requested" && (
-                    <AttemptBadge n={r.document_attempts} cap={CAPS.document} label="Chase attempts" />
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <QuickActions referral={r} onAction={(a, note) => run(r, a, note)} disabled={pending} />
-                <Link
-                  href={`/tracking/${r.code}`}
-                  className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-navy hover:border-star"
-                >
-                  Open
-                </Link>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
+              </Card>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
 function fmtDue(iso: string | null): string {
   if (!iso) return "—";
   const diff = Math.round((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60));
-  if (diff < 0) return `${Math.abs(diff)}h ago`;
+  if (diff < 0) return Math.abs(diff) >= 48 ? `${Math.round(Math.abs(diff) / 24)}d ago` : `${Math.abs(diff)}h ago`;
   if (diff < 24) return `in ${diff}h`;
   return fmtShortDate(iso);
 }

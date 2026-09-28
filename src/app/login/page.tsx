@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { InlineError, Spinner } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,62 +29,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-navy-900 px-4">
-      <div className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-login px-4 py-10">
+      <div className="w-full max-w-sm animate-fade-up">
         <div className="mb-8 flex flex-col items-center">
           <Image src="/logo-white.png" alt="Aizer" width={150} height={42} priority />
           <div className="mt-4 text-center">
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-star-200/70">
+            <div className="text-2xs font-semibold uppercase tracking-[0.2em] text-star-200/80">
               Department of Vision
             </div>
-            <div className="text-lg font-semibold text-white">Referral Tracker</div>
+            <div className="mt-0.5 text-xl font-semibold text-white">Referral Tracker</div>
           </div>
         </div>
 
-        <div className="rounded-xl2 bg-white p-7 shadow-pop">
+        <div className="rounded-modal bg-white p-7 shadow-overlay ring-1 ring-white/10">
           <h1 className="text-lg font-semibold text-ink">Sign in</h1>
           <p className="mt-1 text-sm text-muted">Use the account provided by your administrator.</p>
 
-          <form onSubmit={submit} className="mt-5 space-y-4">
+          <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-ink">Email</label>
+              <label htmlFor="email" className="field-label">Email</label>
               <input
+                id="email"
                 type="email"
                 required
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
+                className="field"
                 placeholder="you@aizerhealth.com"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-ink">Password</label>
+              <label htmlFor="password" className="field-label">Password</label>
               <input
+                id="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20"
+                className="field"
                 placeholder="••••••••"
               />
             </div>
 
-            {error && (
-              <div className="rounded-lg bg-overdue-soft px-3 py-2 text-sm text-overdue">{error}</div>
-            )}
+            <InlineError>{error}</InlineError>
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-lg bg-navy py-2.5 text-sm font-semibold text-white transition hover:bg-navy-700 disabled:opacity-60"
-            >
-              {busy ? "Signing in…" : "Sign in"}
+            <button type="submit" disabled={busy} className="btn btn-primary w-full py-2.5">
+              {busy ? <><Spinner className="h-4 w-4" /> Signing in…</> : "Sign in"}
             </button>
           </form>
         </div>
 
-        <p className="mt-5 text-center text-xs text-star-200/60">
-          Contains patient MRNs · Authorized staff only
+        {/* The app stores patient MRNs, so it must not claim to hold no patient data. */}
+        <p className="mt-5 text-center text-xs text-star-200/70">
+          Contains patient MRNs (PHI) · Authorized staff only
         </p>
       </div>
     </div>

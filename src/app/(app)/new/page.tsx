@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMe, getProviders } from "@/lib/data";
 import { NewReferralForm } from "@/components/NewReferralForm";
+import { PageHeader } from "@/components/ui";
 
 export default async function NewReferralPage() {
   const me = await getMe();
@@ -12,15 +13,17 @@ export default async function NewReferralPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink">New referral</h1>
-        <p className="mt-1 text-sm text-muted">
-          Creates a tracking code for the patient’s referral.{" "}
-          <Link href="/new/existing" className="font-medium text-navy underline-offset-2 hover:underline">
-            Already in progress? Add existing referral
-          </Link>
-        </p>
-      </header>
+      <PageHeader
+        title="New referral"
+        description={
+          <>
+            Creates a tracking code for the patient’s referral.{" "}
+            <Link href="/new/existing" className="font-semibold text-navy underline-offset-2 hover:underline">
+              Already in progress? Add existing referral
+            </Link>
+          </>
+        }
+      />
       <NewReferralForm providers={providers} />
     </div>
   );

@@ -12,7 +12,7 @@ import {
   todayYmd,
 } from "@/lib/weeklyReport";
 import { WeeklyReportView } from "@/components/WeeklyReportView";
-import { Card } from "@/components/ui";
+import { Card, PageHeader, EmptyState } from "@/components/ui";
 
 export default async function WeeklyReportsPage({
   searchParams,
@@ -29,7 +29,7 @@ export default async function WeeklyReportsPage({
   const showChange = searchParams.change !== "0";
 
   if (!provider) {
-    return <Card className="p-8 text-center text-sm text-muted">No active internal providers.</Card>;
+    return <Card><EmptyState icon="user" title="No active internal providers">Add or reactivate a provider to build a report.</EmptyState></Card>;
   }
 
   const referrals = await getReferrals(provider.id);
@@ -39,12 +39,10 @@ export default async function WeeklyReportsPage({
 
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink">Weekly Reports</h1>
-        <p className="mt-1 text-sm text-muted">
-          One report per internal provider. Review, copy, and send it yourself from Outlook — this app never sends email.
-        </p>
-      </header>
+      <PageHeader
+        title="Weekly Reports"
+        description="One report per internal provider. Review, copy, and send it yourself from Outlook — this app never sends email."
+      />
       <WeeklyReportView
         providers={providers.map((p) => ({ id: p.id, name: p.name }))}
         provider={{ id: provider.id, name: provider.name, email: provider.report_email }}

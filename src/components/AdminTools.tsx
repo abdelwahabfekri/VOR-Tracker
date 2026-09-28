@@ -6,49 +6,64 @@ import type { AppointmentStatus, DocumentStatus, Referral, ReferringProvider } f
 import { APPT_LABEL, DOC_LABEL, isActive } from "@/lib/types";
 import { correctStatus as previewCorrection, type Correction } from "@/lib/statusEngine";
 import { correctStatus, editReferralDetails, performAction } from "@/lib/actions";
-import { Card } from "@/components/ui";
+import { Card, SectionHeading, InlineError } from "@/components/ui";
+import { Dialog } from "@/components/Dialog";
+import { Icon, type IconName } from "@/components/Icon";
+import { toast } from "@/components/Toast";
 import { fmtDateTime, isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 type Panel = "edit" | "followup" | "correct";
 
-const input =
-  "w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-star focus:ring-2 focus:ring-star/20";
-const label = "mb-1 block text-xs font-medium text-muted";
-const primaryBtn =
-  "rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-700 disabled:opacity-50";
+const input = "field";
+const label = "field-label";
+const primaryBtn = "btn btn-primary";
 
-// Admin-only corrections, kept apart from the day-to-day quick actions so they
-// are not clicked by accident.
+// Admin-only corrections, kept apart from the day-to-day mission actions so
+// they are not clicked by accident. Short tasks open as a modal; the longer
+// edit form opens as a side drawer (full screen on phones).
 export function AdminTools({ referral, providers }: { referral: Referral; providers: ReferringProvider[] }) {
   const [panel, setPanel] = useState<Panel | null>(null);
+  const close = () => setPanel(null);
 
-  const tabs: { key: Panel; label: string; show: boolean }[] = [
-    { key: "edit", label: "Edit details", show: true },
-    { key: "followup", label: "Set follow-up date", show: isActive(referral) },
-    { key: "correct", label: "Correct status", show: true },
+  const tools: { key: Panel; label: string; help: string; icon: IconName; show: boolean }[] = [
+    { key: "edit", label: "Edit details", help: "MRN, provider, specialist, dates", icon: "edit", show: true },
+    { key: "followup", label: "Set follow-up date", help: "Move the next due date only", icon: "clock", show: isActive(referral) },
+    { key: "correct", label: "Correct status", help: "Fix a status entered by mistake", icon: "sliders", show: true },
   ];
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Admin tools</h2>
-        <div className="flex flex-wrap gap-1.5">
-          {tabs.filter((t) => t.show).map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setPanel(panel === t.key ? null : t.key)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                panel === t.key ? "border-navy bg-navy text-white" : "border-line text-navy hover:border-star"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+    <Card className="p-5 md:p-6" tone="neutral">
+      <SectionHeading title="Admin controls" icon="sliders" eyebrow="Administrator" />
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        {tools.filter((t) => t.show).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setPanel(t.key)}
+            className="group flex items-start gap-3 rounded-ctl border border-line bg-white p-3 text-left transition duration-fast hover:-translate-y-0.5 hover:border-star/50 hover:shadow-lifted focus-visible:outline-none focus-visible:shadow-glow-star"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy/5 text-navy group-hover:bg-star/10 group-hover:text-star">
+              <Icon name={t.icon} className="h-4 w-4" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-ink">{t.label}</span>
+              <span className="block text-xs text-muted">{t.help}</span>
+            </span>
+          </button>
+        ))}
       </div>
-      {panel === "edit" && <EditDetails referral={referral} providers={providers} onDone={() => setPanel(null)} />}
-      {panel === "followup" && <SetFollowup referral={referral} onDone={() => setPanel(null)} />}
-      {panel === "correct" && <CorrectStatus referral={referral} onDone={() => setPanel(null)} />}
+
+      <Dialog open={panel === "edit"} onClose={close} variant="drawer" title="Edit details"
+        description="Changes descriptive details only. Statuses change through actions or Correct status.">
+        <EditDetails referral={referral} providers={providers} onDone={close} />
+      </Dialog>
+      <Dialog open={panel === "followup"} onClose={close} title="Set follow-up date"
+        description="Only the date changes — the status stays as it is.">
+        <SetFollowup referral={referral} onDone={close} />
+      </Dialog>
+      <Dialog open={panel === "correct"} onClose={close} title="Correct status"
+        description={<>Fixes a status entered by mistake. History is kept: a “Status corrected” entry is added with your reason.</>}>
+        <CorrectStatus referral={referral} onDone={close} />
+      </Dialog>
     </Card>
   );
 }
@@ -57,21 +72,21 @@ function useSave() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  async function save(fn: () => Promise<{ ok: boolean; error?: string }>, onDone: () => void) {
+  async function save(fn: () => Promise<{ ok: boolean; error?: string }>, onDone: () => void, done = "Saved.") {
     setPending(true);
     setError(null);
     const res = await fn();
     setPending(false);
     if (!res.ok) { setError(res.error ?? "Could not save. Try again."); return; } // inputs kept for retry
     router.refresh();
+    toast(done);
     onDone();
   }
   return { pending, error, save };
 }
 
 function ErrorLine({ error }: { error: string | null }) {
-  if (!error) return null;
-  return <div role="alert" className="rounded-lg bg-overdue-soft px-3 py-2 text-sm text-overdue">{error}</div>;
+  return <InlineError>{error}</InlineError>;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,17 +122,17 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
           specialist_fax: f.specialist_fax,
           appointment_slot: slotEditable && f.slot ? nyInputToIso(f.slot) : null,
         }),
-      onDone
+      onDone,
+      "Details saved."
     );
   }
 
   return (
-    <form onSubmit={submit} className="mt-4 space-y-4 border-t border-line pt-4">
-      <p className="text-xs text-muted">Changes descriptive details only. Statuses change through actions or Correct status.</p>
+    <form onSubmit={submit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className={label}>MRN</label>
-          <input className={`${input} font-mono`} value={f.mrn} onChange={(e) => set("mrn", e.target.value)} maxLength={32} required autoComplete="off" />
+          <input className={`${input} num`} value={f.mrn} onChange={(e) => set("mrn", e.target.value)} maxLength={32} required autoComplete="off" />
         </div>
         <div>
           <label className={label}>Internal provider</label>
@@ -154,11 +169,11 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
         </div>
         <div>
           <label className={label}>Specialist phone</label>
-          <input className={`${input} font-mono`} value={f.specialist_phone} onChange={(e) => set("specialist_phone", e.target.value)} />
+          <input className={`${input} num`} value={f.specialist_phone} onChange={(e) => set("specialist_phone", e.target.value)} />
         </div>
         <div>
           <label className={label}>Specialist fax</label>
-          <input className={`${input} font-mono`} value={f.specialist_fax} onChange={(e) => set("specialist_fax", e.target.value)} />
+          <input className={`${input} num`} value={f.specialist_fax} onChange={(e) => set("specialist_fax", e.target.value)} />
         </div>
       </div>
       <ErrorLine error={error} />
@@ -182,14 +197,13 @@ function SetFollowup({ referral, onDone }: { referral: Referral; onDone: () => v
     save(async () => {
       const res = await performAction(referral.id, referral.updated_at, { kind: "set_followup", due: nyInputToIso(due) }, "outbound", note);
       return res;
-    }, onDone);
+    }, onDone, "Follow-up date updated.");
   }
 
   return (
-    <form onSubmit={submit} className="mt-4 space-y-3 border-t border-line pt-4">
+    <form onSubmit={submit} className="space-y-4">
       <p className="text-sm text-muted">
-        Current follow-up: <span className="font-medium text-ink">{fmtDateTime(referral.next_action_due)}</span>. Only the
-        date changes — the status stays as it is.
+        Current follow-up: <span className="font-medium text-ink">{fmtDateTime(referral.next_action_due)}</span>
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
@@ -202,7 +216,7 @@ function SetFollowup({ referral, onDone }: { referral: Referral; onDone: () => v
         </div>
       </div>
       {inPast && (
-        <label className="flex items-center gap-2 rounded-lg bg-soon-soft px-3 py-2 text-sm text-soon">
+        <label className="flex items-center gap-2 rounded-ctl bg-soon-soft px-3 py-2 text-sm text-soon">
           <input type="checkbox" checked={confirmPast} onChange={(e) => setConfirmPast(e.target.checked)} />
           This date is in the past — the referral will show as overdue right away.
         </label>
@@ -257,14 +271,11 @@ function CorrectStatus({ referral, onDone }: { referral: Referral; onDone: () =>
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!correction || !preview || "problem" in preview || !reason.trim()) return;
-    save(() => correctStatus(referral.id, referral.updated_at, correction, reason), onDone);
+    save(() => correctStatus(referral.id, referral.updated_at, correction, reason), onDone, "Status corrected.");
   }
 
   return (
-    <form onSubmit={submit} className="mt-4 space-y-3 border-t border-line pt-4">
-      <p className="text-xs text-muted">
-        Fixes a status entered by mistake. History is kept: a “Status corrected” entry is added with your reason.
-      </p>
+    <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={label}>Track</label>
@@ -302,10 +313,10 @@ function CorrectStatus({ referral, onDone }: { referral: Referral; onDone: () =>
       </div>
 
       {preview && "problem" in preview && (
-        <div className="rounded-lg bg-soon-soft px-3 py-2 text-sm text-soon">{preview.problem}</div>
+        <div className="rounded-ctl bg-soon-soft px-3 py-2 text-sm text-soon">{preview.problem}</div>
       )}
       {preview && "result" in preview && (
-        <div className="rounded-lg border border-line bg-canvas px-3 py-2.5 text-sm">
+        <div className="rounded-ctl border border-line bg-canvas px-3 py-2.5 text-sm">
           <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Preview</div>
           <ul className="space-y-0.5 text-ink">
             {preview.result.events.map((ev, i) => (
@@ -322,7 +333,7 @@ function CorrectStatus({ referral, onDone }: { referral: Referral; onDone: () =>
       <ErrorLine error={error} />
       <button
         type="submit"
-        className="rounded-lg bg-overdue px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        className="btn btn-danger-solid"
         disabled={pending || !preview || "problem" in preview || !reason.trim()}
       >
         {pending ? "Saving…" : "Confirm correction"}

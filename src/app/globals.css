@@ -2,19 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-inter: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+/* --font-poppins / --font-mono come from next/font on <html>. Don't redefine
+   them on :root — same specificity, and a later rule would win over the real
+   font. Fallback stacks live in tailwind.config.ts. */
 
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
-  font-family: var(--font-inter);
-  @apply bg-canvas text-ink antialiased;
+  @apply bg-canvas font-sans text-ink antialiased;
+  /* Calm, static canvas: a faint blue glow at the top, green on the far side. */
+  background-image:
+    radial-gradient(900px 380px at 18% -120px, rgba(143, 208, 242, 0.22), transparent 70%),
+    radial-gradient(700px 360px at 100% 0, rgba(46, 125, 91, 0.06), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-@keyframes copied { 0% { background:#E4EFEA; } 100% { background:transparent; } }
-.copied-flash { animation: copied 0.8s ease-out; }
+@layer components {
+  /* ---- Buttons ----------------------------------------------------------- */
+  .btn {
+    @apply relative inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-ctl px-3.5 py-2 text-sm font-semibold
+      transition duration-fast ease-out active:scale-[0.98] active:duration-press
+      disabled:pointer-events-none disabled:opacity-50
+      focus-visible:outline-none focus-visible:shadow-glow-star;
+  }
+  .btn-sm { @apply px-3 py-1.5 text-xs; }
+  .btn-primary {
+    @apply bg-primary text-white shadow-surface hover:shadow-glow-btn;
+  }
+  .btn-primary .btn-icon { @apply transition-transform duration-fast; }
+  .btn-primary:hover .btn-icon { transform: translateX(2px); }
+  .btn-star { @apply bg-star-btn text-navy-900 shadow-surface hover:shadow-glow-btn; }
+  .btn-secondary {
+    @apply border border-line bg-white text-navy hover:border-star/60 hover:bg-star/5;
+  }
+  .btn-ghost { @apply text-muted hover:bg-navy/5 hover:text-ink; }
+  .btn-danger {
+    @apply border border-overdue/35 bg-white text-overdue hover:bg-overdue-soft;
+  }
+  .btn-danger-solid { @apply bg-overdue text-white hover:brightness-95; }
+  .btn-docs { @apply border border-docs/35 bg-white text-docs hover:bg-docs-soft; }
+
+  /* ---- Inputs ------------------------------------------------------------ */
+  .field {
+    @apply w-full rounded-ctl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none
+      transition duration-fast placeholder:text-muted/70
+      hover:border-navy/20 focus:border-star focus:shadow-glow-star;
+  }
+  .field-sm { @apply px-2.5 py-1.5 text-xs; }
+  .field-label { @apply mb-1.5 block text-sm font-medium text-ink; }
+  .field-help { @apply mt-1 text-xs text-muted; }
+
+  /* ---- Type helpers ------------------------------------------------------ */
+  .eyebrow { @apply text-2xs font-semibold uppercase tracking-[0.08em] text-muted; }
+  .section-title { @apply text-base font-semibold text-ink; }
+  /* Identifiers (MRN, VOR code, phone) and number columns: monospace digits
+     line up and 0/O, 1/l stay distinct. */
+  .num { @apply font-mono; font-variant-numeric: tabular-nums slashed-zero; }
+
+  /* ---- Surfaces ---------------------------------------------------------- */
+  .skeleton {
+    @apply rounded-md bg-line/70;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+    background-size: 400px 100%;
+    background-repeat: no-repeat;
+    @apply animate-shimmer;
+  }
+  .glass { @apply border border-white/15 bg-white/10 backdrop-blur-md; }
+
+  /* ---- Dialog (<dialog>) ------------------------------------------------- */
+  dialog.modal {
+    @apply m-auto w-[min(560px,calc(100vw-32px))] max-w-none rounded-modal border-0 bg-white p-0 text-ink shadow-overlay;
+  }
+  dialog.modal[open] { @apply animate-dialog-in; }
+  dialog.drawer {
+    @apply m-0 ml-auto h-full max-h-none w-full max-w-none rounded-none border-0 bg-white p-0 text-ink shadow-overlay
+      sm:h-[100dvh] sm:w-[min(640px,100vw)] sm:rounded-l-modal;
+  }
+  dialog.drawer[open] { @apply animate-drawer-in; }
+  dialog::backdrop { background: rgba(11, 31, 56, 0.42); backdrop-filter: blur(2px); }
+}
+
+/* Clickable rows / cards reveal an arrow on hover and on keyboard focus. */
+.row-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 160ms ease-out, transform 160ms ease-out; }
+.group:hover .row-arrow, .group:focus-within .row-arrow { opacity: 1; transform: none; }
+
+/* Collapsing list items (To-Do card leaving after an action). */
+.collapse-out {
+  opacity: 0;
+  transform: translateX(12px) scale(0.98);
+  transition: opacity 240ms cubic-bezier(0.55,0,1,0.45), transform 240ms cubic-bezier(0.55,0,1,0.45);
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

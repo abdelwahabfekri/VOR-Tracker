@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Referral } from "@/lib/types";
 import { deleteReferral } from "@/lib/actions";
-import { Card } from "@/components/ui";
+import { Card, InlineError, Spinner } from "@/components/ui";
+import { Dialog } from "@/components/Dialog";
+import { Icon } from "@/components/Icon";
 
 export function DeleteReferral({ referral }: { referral: Referral }) {
   const router = useRouter();
@@ -13,7 +15,14 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function confirm() {
+  function close() {
+    setOpen(false);
+    setTyped("");
+    setError(null);
+  }
+
+  function confirm(e: React.FormEvent) {
+    e.preventDefault();
     startTransition(async () => {
       const res = await deleteReferral(referral.id, typed);
       if (!res.ok) {
@@ -25,48 +34,53 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
   }
 
   return (
-    <Card className="border-overdue/30 p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-overdue">Danger zone</h2>
-      {!open ? (
-        <div className="mt-3">
-          <p className="mb-3 text-sm text-muted">Permanently delete this referral and its history. This cannot be undone.</p>
-          <button
-            className="rounded-lg border border-overdue/30 px-3 py-1.5 text-xs font-semibold text-overdue transition hover:bg-overdue-soft"
-            onClick={() => setOpen(true)}
-          >
-            Delete referral
-          </button>
+    <Card className="border-overdue/25 p-5 md:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-ctl bg-overdue-soft text-overdue">
+            <Icon name="trash" className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-overdue">Danger zone</h2>
+            <p className="text-sm text-muted">Permanently delete this referral and its history. This cannot be undone.</p>
+          </div>
         </div>
-      ) : (
-        <div className="mt-3 space-y-2">
-          <p className="text-sm text-muted">
-            Type <span className="font-mono font-semibold text-ink">{referral.code}</span> to confirm deletion.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
+        <button className="btn btn-danger" onClick={() => setOpen(true)}>
+          <Icon name="trash" className="h-4 w-4" />
+          Delete referral
+        </button>
+      </div>
+
+      <Dialog
+        open={open}
+        onClose={close}
+        title="Delete this referral?"
+        description={<>The referral, its journey and its full history are removed for everyone. <strong className="text-ink">This cannot be undone.</strong></>}
+      >
+        <form onSubmit={confirm} className="space-y-4">
+          <div>
+            <label htmlFor="confirm-code" className="field-label">
+              Type <span className="num font-semibold">{referral.code}</span> to confirm
+            </label>
             <input
+              id="confirm-code"
               autoFocus
+              autoComplete="off"
               value={typed}
               onChange={(e) => { setTyped(e.target.value); setError(null); }}
               placeholder={referral.code}
-              className="rounded-lg border border-line px-2 py-1.5 text-xs font-mono outline-none focus:border-overdue"
+              className="field num focus:border-overdue"
             />
-            <button
-              className="rounded-lg bg-overdue px-3 py-1.5 text-xs font-semibold text-white transition disabled:opacity-50"
-              disabled={pending || typed !== referral.code}
-              onClick={confirm}
-            >
-              {pending ? "Deleting…" : "Confirm delete"}
-            </button>
-            <button
-              className="text-xs text-muted hover:text-ink"
-              onClick={() => { setOpen(false); setTyped(""); setError(null); }}
-            >
-              Cancel
+          </div>
+          <InlineError>{error}</InlineError>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn btn-ghost" onClick={close}>Keep referral</button>
+            <button type="submit" className="btn btn-danger-solid" disabled={pending || typed !== referral.code}>
+              {pending ? <><Spinner className="h-3.5 w-3.5" /> Deleting…</> : <><Icon name="trash" className="h-4 w-4" /> Delete permanently</>}
             </button>
           </div>
-          {error && <p className="text-xs text-overdue">{error}</p>}
-        </div>
-      )}
+        </form>
+      </Dialog>
     </Card>
   );
 }

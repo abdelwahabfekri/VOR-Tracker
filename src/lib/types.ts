@@ -84,6 +84,10 @@ export interface AppUser {
   active: boolean;
 }
 
+// Global MRN search starts at this many characters (no "no results" noise
+// while the user is still typing the first digits).
+export const MIN_MRN_SEARCH = 3;
+
 // ---- Human-readable labels (shipping-theme voice where it helps) ----------
 
 export const APPT_LABEL: Record<AppointmentStatus, string> = {

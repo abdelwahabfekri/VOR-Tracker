@@ -498,3 +498,19 @@ export function staleTag(r: Referral, now: Date = new Date()): StaleTag | null {
   if (days >= 7) return "NO UPDATE 7+ DAYS";
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Follow-up indicator for the UI (tracking list, journey, to-do). A parked
+// "unable to reach" referral has no due date but still needs review, so it
+// gets its own tag instead of reading as "on track".
+// ---------------------------------------------------------------------------
+export type FollowupKind = "overdue" | "soon" | "ontrack" | "unreachable";
+
+export function followupKind(r: Referral, now: Date = new Date()): FollowupKind | null {
+  if (isReferralClosed(r)) return null;
+  if (r.appointment_state === "patient_not_replying") return "unreachable";
+  const u = urgency(r, now);
+  if (u === "overdue") return "overdue";
+  if (u === "soon") return "soon";
+  return "ontrack";
+}

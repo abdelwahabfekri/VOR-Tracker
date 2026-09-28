@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
 import { getMe, getReferrals, getProviders } from "@/lib/data";
 import { TrackingTable } from "@/components/TrackingTable";
+import { PageHeader } from "@/components/ui";
 
+// No search term is ever read from the URL: MRN filtering happens in the
+// page (client-side, over rows RLS already allowed) and the global search
+// uses a server action.
 export default async function TrackingPage({
   searchParams,
 }: {
-  searchParams: { provider?: string; status?: string; q?: string };
+  searchParams: { provider?: string; status?: string };
 }) {
   const me = await getMe();
   if (!me) redirect("/login");
@@ -19,18 +23,15 @@ export default async function TrackingPage({
 
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink">Tracking</h1>
-        <p className="mt-1 text-sm text-muted">
-          Every referral and where it stands. Select a row to see its full journey.
-        </p>
-      </header>
+      <PageHeader
+        title="Tracking"
+        description="Every referral and where it stands. Open a row to see its full journey."
+      />
       <TrackingTable
         referrals={referrals}
         providers={providers}
         activeProvider={providerId}
         activeStatus={activeStatus}
-        initialQuery={searchParams.q ?? ""}
       />
     </div>
   );

@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getMe, getReferralByCode, getHistory, getProviders } from "@/lib/data";
-import { TrackProgress } from "@/components/TrackProgress";
-import { CodeChip, ApptChip, DocChip, AttemptBadge, Card, StaleChip } from "@/components/ui";
+import { ReferralJourney } from "@/components/TrackProgress";
+import { CodeChip, ApptChip, DocChip, AttemptBadge, Card, StaleChip, Mrn, SectionHeading } from "@/components/ui";
+import { Icon } from "@/components/Icon";
 import { CAPS, staleTag } from "@/lib/statusEngine";
 import { AdminTools } from "@/components/AdminTools";
 import { DetailActions } from "@/components/DetailActions";
@@ -10,10 +11,10 @@ import { DeleteReferral } from "@/components/DeleteReferral";
 import { ScanHistory } from "@/components/ScanHistory";
 import { CallLogTable } from "@/components/CallLogTable";
 import { NotesSection } from "@/components/NotesSection";
-import { InboundCallPanel } from "@/components/InboundCallPanel";
-import { firstReachedMap } from "@/lib/callLog";
 import { fmtDateTime } from "@/lib/tz";
 
+// Order: identity → journey → current mission → details → calls & notes →
+// activity timeline → admin controls (kept apart from daily actions).
 export default async function ReferralDetail({ params }: { params: { code: string } }) {
   const me = await getMe();
   if (!me) redirect("/login");
@@ -25,111 +26,104 @@ export default async function ReferralDetail({ params }: { params: { code: strin
     getHistory(referral.id),
     isAdmin ? getProviders() : Promise.resolve([]),
   ]);
-  const dormant = referral.document_state === "awaiting_appointment";
-  const checkpointDates = firstReachedMap(history);
-  // "Visit done" should show the actual visit date (locked in at confirmation),
-  // not the moment the admin logged completion — those can differ by a day or more.
-  if (referral.appointment_slot) {
-    checkpointDates["appointment_completed"] = referral.appointment_slot;
-  }
 
   return (
-    <div>
-      <Link href="/tracking" className="text-sm text-muted hover:text-navy">← Back to tracking</Link>
+    <div className="space-y-6">
+      <Link href="/tracking" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted transition hover:text-navy">
+        <Icon name="arrowLeft" className="h-4 w-4" /> Back to tracking
+      </Link>
 
-      {/* Header */}
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <CodeChip code={referral.code} big />
-            <span className="text-sm text-muted">Tracking number</span>
+      {/* 1. Identity */}
+      <Card className="p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="min-w-0">
+            <div className="eyebrow">MRN</div>
+            <Mrn value={referral.mrn} className="text-2xl md:text-[28px]" />
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <CodeChip code={referral.code} big />
+              <span className="text-xs text-muted">Tracking number</span>
+            </div>
           </div>
-          <div className="mt-2 text-sm">
-            <span className="text-muted">MRN </span>
-            <span className="font-mono font-medium text-ink">{referral.mrn ?? "—"}</span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <ApptChip state={referral.appointment_state} />
-            <DocChip state={referral.document_state} dormant={dormant} />
-            <StaleChip tag={staleTag(referral)} />
-          </div>
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:text-right">
+            <div>
+              <dt className="eyebrow">Referring provider</dt>
+              <dd className="mt-0.5 font-medium text-ink">{referral.referring_provider_name}</dd>
+            </div>
+            <div>
+              <dt className="eyebrow">Opened</dt>
+              <dd className="num mt-0.5 text-[13px] text-ink">{fmtDateTime(referral.referral_date)}</dd>
+            </div>
+          </dl>
         </div>
-        <div className="text-right text-sm">
-          <div className="text-muted">Referring provider</div>
-          <div className="font-medium text-ink">{referral.referring_provider_name}</div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line/70 pt-4">
+          <ApptChip state={referral.appointment_state} />
+          <DocChip state={referral.document_state} />
+          <StaleChip tag={staleTag(referral)} />
         </div>
+      </Card>
+
+      {/* 2. Journey */}
+      <ReferralJourney referral={referral} history={history} />
+
+      {/* 3. Current mission */}
+      <DetailActions referral={referral} isAdmin={isAdmin} />
+
+      {/* 4. Specialist + operational details */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="p-5 md:p-6">
+          <SectionHeading title="Specialist" icon="user" eyebrow="Destination" />
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            <Field label="Specialist" value={referral.specialist_name} />
+            <Field label="Specialty" value={referral.specialty} />
+            <Field label="Phone" value={referral.specialist_phone} mono />
+            <Field label="Fax" value={referral.specialist_fax} mono />
+          </dl>
+        </Card>
+
+        <Card className="p-5 md:p-6">
+          <SectionHeading title="Operational details" icon="clock" />
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            <Field label="Appointment" value={referral.appointment_slot ? fmtDateTime(referral.appointment_slot) : null} />
+            <Field label="Next follow-up" value={referral.next_action_due ? fmtDateTime(referral.next_action_due) : null} />
+            <Field label="Last update" value={fmtDateTime(referral.last_action_at)} />
+            <Field label="Visit completed" value={referral.completed_at ? fmtDateTime(referral.completed_at) : null} />
+            <div>
+              <dt className="eyebrow">Attempts</dt>
+              <dd className="mt-1 flex flex-wrap gap-1.5">
+                <AttemptBadge n={referral.contact_attempts} cap={CAPS.contact} label="Contact attempts" />
+                <AttemptBadge n={referral.reschedule_count} cap={CAPS.reschedule} label="Reschedules" />
+                <AttemptBadge n={referral.document_attempts} cap={CAPS.document} label="Records chases" />
+              </dd>
+            </div>
+          </dl>
+        </Card>
       </div>
 
-      {/* Journey */}
-      <Card className="mt-6 p-6">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Journey</h2>
-        <TrackProgress referral={referral} dates={checkpointDates} />
-      </Card>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {/* Left: details + actions */}
-        <div className="space-y-6 lg:col-span-2">
-          {isAdmin && <DetailActions referral={referral} />}
-          {isAdmin && <InboundCallPanel referral={referral} />}
-
-          {/* Specialist reference (destination) */}
-          <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">Destination — specialist</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <Field label="Specialist" value={referral.specialist_name} />
-              <Field label="Specialty" value={referral.specialty} />
-              <Field label="Phone" value={referral.specialist_phone} mono />
-              <Field label="Fax" value={referral.specialist_fax} mono />
-            </dl>
+      {/* 5–6. Calls & notes | activity timeline */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="space-y-6 lg:col-span-3">
+          <Card className="p-5 md:p-6">
+            <SectionHeading title="Call log" icon="phone" />
+            <CallLogTable entries={history} />
           </Card>
-
-          {/* Operational meta */}
-          <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">Details</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <Field label="Opened" value={fmtDateTime(referral.referral_date)} />
-              <Field label="Appointment slot" value={referral.appointment_slot ? fmtDateTime(referral.appointment_slot) : null} />
-              <Field label="Next follow-up" value={referral.next_action_due ? fmtDateTime(referral.next_action_due) : null} />
-              <Field label="Last update" value={fmtDateTime(referral.last_action_at)} />
-              <Field label="Completed" value={referral.completed_at ? fmtDateTime(referral.completed_at) : null} />
-              <div>
-                <dt className="text-muted">Contact attempts</dt>
-                <dd className="mt-0.5"><AttemptBadge n={referral.contact_attempts} cap={CAPS.contact} label="Contact" /></dd>
-              </div>
-              <div>
-                <dt className="text-muted">Reschedules</dt>
-                <dd className="mt-0.5"><AttemptBadge n={referral.reschedule_count} cap={CAPS.reschedule} label="Reschedule" /></dd>
-              </div>
-              <div>
-                <dt className="text-muted">Record chases</dt>
-                <dd className="mt-0.5"><AttemptBadge n={referral.document_attempts} cap={CAPS.document} label="Chase" /></dd>
-              </div>
-            </dl>
-          </Card>
-
-          {isAdmin && <AdminTools referral={referral} providers={providers} />}
-          {isAdmin && <DeleteReferral referral={referral} />}
-        </div>
-
-        {/* Right: scan history */}
-        <div>
-          <Card className="p-5">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Tracking history</h2>
-            <ScanHistory entries={history} />
+          <Card className="p-5 md:p-6">
+            <SectionHeading title="Notes" icon="note" />
+            <NotesSection entries={history} />
           </Card>
         </div>
+        <Card className="p-5 md:p-6 lg:col-span-2">
+          <SectionHeading title="Activity timeline" icon="history" />
+          <ScanHistory entries={history} />
+        </Card>
       </div>
 
-      {/* Call log — full width at the bottom */}
-      <Card className="mt-6 p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Call log</h2>
-        <CallLogTable entries={history} />
-      </Card>
-
-      <Card className="mt-6 p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Notes</h2>
-        <NotesSection entries={history} />
-      </Card>
+      {/* 7. Admin controls */}
+      {isAdmin && (
+        <div className="space-y-4 pt-2">
+          <AdminTools referral={referral} providers={providers} />
+          <DeleteReferral referral={referral} />
+        </div>
+      )}
     </div>
   );
 }
@@ -137,8 +131,8 @@ export default async function ReferralDetail({ params }: { params: { code: strin
 function Field({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
     <div>
-      <dt className="text-muted">{label}</dt>
-      <dd className={`mt-0.5 text-ink ${mono ? "font-mono" : ""}`}>{value || "—"}</dd>
+      <dt className="eyebrow">{label}</dt>
+      <dd className={`mt-1 text-ink ${mono ? "num text-[13px]" : ""}`}>{value || "—"}</dd>
     </div>
   );
 }
