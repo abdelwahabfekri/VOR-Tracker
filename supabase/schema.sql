@@ -94,8 +94,7 @@ create table referrals (
 
   -- Patient MRN (PHI). Text, never numeric, so leading zeros survive.
   -- Not unique: one patient can have several referrals.
-  -- Nullable until pre-MRN referrals are backfilled; the app requires it on create.
-  mrn                   text
+  mrn                   text not null
     constraint mrn_format check (mrn = btrim(mrn) and char_length(mrn) between 1 and 32),
 
   -- Directory info (NON-PHI)

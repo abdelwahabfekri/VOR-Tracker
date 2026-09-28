@@ -41,7 +41,7 @@ export interface ReferringProvider {
 export interface Referral {
   id: string;
   code: string; // VOR-#######
-  mrn: string | null; // text, keeps leading zeros; null only on pre-MRN referrals
+  mrn: string; // text, keeps leading zeros
   referring_provider_id: string;
   referring_provider_name?: string;
   specialist_name: string | null;
