@@ -84,14 +84,14 @@ export function TodoBoard({
 
       {actionable.length === 0 && (
         <Card>
-          <EmptyState icon="check" title="All caught up">
+          <EmptyState icon="check" title="All Caught Up">
             Nothing is due right now. New calls and record chases will appear here as they come due.
           </EmptyState>
         </Card>
       )}
 
       <Section title="Overdue" icon="alert" items={overdue} run={run} pending={pending} tone="overdue" leaving={leaving} />
-      <Section title="Due soon" icon="clock" items={soon} run={run} pending={pending} tone="soon" leaving={leaving} />
+      <Section title="Due Soon" icon="clock" items={soon} run={run} pending={pending} tone="soon" leaving={leaving} />
       <Section title="Upcoming" icon="calendar" items={upcoming} run={run} pending={pending} tone="muted" leaving={leaving} />
     </div>
   );

@@ -42,7 +42,7 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-modal bg-white p-7 shadow-overlay ring-1 ring-white/10">
-          <h1 className="text-lg font-semibold text-ink">Sign in</h1>
+          <h1 className="text-lg font-semibold text-ink">Sign In</h1>
           <p className="mt-1 text-sm text-muted">Use the account provided by your administrator.</p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">

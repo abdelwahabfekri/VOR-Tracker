@@ -43,7 +43,7 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
   if (created) {
     return (
       <SuccessCard
-        title="Referral created"
+        title="Referral Created"
         mrn={created.mrn}
         code={created.code}
         onAnother={() => { setCreated(null); setForm({ ...form, mrn: "", specialist_name: "", specialty: "", specialist_phone: "", specialist_fax: "", referral_date: isoToNyInput(new Date().toISOString()).slice(0, 10) }); }}

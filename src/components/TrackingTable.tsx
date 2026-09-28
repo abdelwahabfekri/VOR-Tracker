@@ -208,13 +208,13 @@ function Th({ children }: { children: React.ReactNode }) {
 function NoRows({ filtered, closed }: { filtered: boolean; closed: boolean }) {
   if (filtered) {
     return (
-      <EmptyState icon="search" title="No referrals match this MRN" compact>
+      <EmptyState icon="search" title="No Referrals Match This MRN" compact>
         Check the digits (leading zeros count), or switch between Active and Closed.
       </EmptyState>
     );
   }
   return (
-    <EmptyState icon={closed ? "archive" : "route"} title={closed ? "No closed referrals yet" : "No active referrals"} compact>
+    <EmptyState icon={closed ? "archive" : "route"} title={closed ? "No Closed Referrals Yet" : "No Active Referrals"} compact>
       {closed ? "Referrals appear here once they reach a final status." : "New referrals appear here as soon as they are created."}
     </EmptyState>
   );

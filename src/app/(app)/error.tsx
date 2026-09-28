@@ -13,7 +13,7 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-overdue shadow-surface">
           <Icon name="alert" className="h-5 w-5" />
         </span>
-        <h1 className="mt-4 text-lg font-semibold text-ink">Could not load this page</h1>
+        <h1 className="mt-4 text-lg font-semibold text-ink">Could Not Load This Page</h1>
         <p className="mt-1 text-sm text-muted">
           The data didn’t load — this is not the same as having no referrals. Check your connection and try again.
         </p>

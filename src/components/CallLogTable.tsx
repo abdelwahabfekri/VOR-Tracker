@@ -7,7 +7,7 @@ import { Icon } from "@/components/Icon";
 export function CallLogTable({ entries }: { entries: StatusHistoryEntry[] }) {
   const rows = toCallLog(entries);
   if (rows.length === 0) {
-    return <EmptyState icon="phone" title="No calls logged yet" compact>Outgoing and incoming calls appear here as they are logged.</EmptyState>;
+    return <EmptyState icon="phone" title="No Calls Logged Yet" compact>Outgoing and incoming calls appear here as they are logged.</EmptyState>;
   }
   return (
     <div className="-mx-5 overflow-x-auto md:-mx-6">

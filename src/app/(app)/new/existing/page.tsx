@@ -18,7 +18,7 @@ export default async function ExistingReferralPage() {
         <Icon name="arrowLeft" className="h-4 w-4" /> New referral
       </Link>
       <PageHeader
-        title="Add existing referral"
+        title="Add Existing Referral"
         description="For a referral already in progress outside the tracker. It is saved at its current stage — earlier steps are not recreated."
       />
       <ExistingReferralForm providers={providers} />

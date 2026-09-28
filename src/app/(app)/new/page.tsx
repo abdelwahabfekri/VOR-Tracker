@@ -14,7 +14,7 @@ export default async function NewReferralPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
-        title="New referral"
+        title="New Referral"
         description={
           <>
             Creates a tracking code for the patient’s referral.{" "}

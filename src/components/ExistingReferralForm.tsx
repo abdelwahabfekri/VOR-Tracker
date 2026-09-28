@@ -128,7 +128,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
   if (created) {
     return (
       <SuccessCard
-        title="Existing referral added"
+        title="Existing Referral Added"
         mrn={payload.mrn}
         code={created}
         onAnother={() => window.location.reload()}
@@ -321,10 +321,10 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
 }
 
 const STEPS: { title: string; description: string; icon: IconName }[] = [
-  { title: "Basic details", description: "MRN, provider, open date and specialist.", icon: "user" },
-  { title: "Appointment status", description: "Where the appointment stands today.", icon: "calendar" },
-  { title: "Records status", description: "Only after the visit is completed.", icon: "file" },
-  { title: "Dates and counts", description: "What already happened, so follow-ups start in the right place.", icon: "clock" },
+  { title: "Basic Details", description: "MRN, provider, open date and specialist.", icon: "user" },
+  { title: "Appointment Status", description: "Where the appointment stands today.", icon: "calendar" },
+  { title: "Records Status", description: "Only after the visit is completed.", icon: "file" },
+  { title: "Dates and Counts", description: "What already happened, so follow-ups start in the right place.", icon: "clock" },
   { title: "Review", description: "Check everything before saving.", icon: "check" },
 ];
 

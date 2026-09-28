@@ -130,7 +130,7 @@ export function QuickActions({
       <Dialog
         open={prompt === "book" || prompt === "reschedule"}
         onClose={() => setPrompt(null)}
-        title={prompt === "reschedule" ? "Reschedule appointment" : "Book appointment"}
+        title={prompt === "reschedule" ? "Reschedule Appointment" : "Book Appointment"}
         description="The confirmation call is scheduled 24 hours before the appointment."
       >
         <SlotForm
@@ -143,7 +143,7 @@ export function QuickActions({
       <Dialog
         open={prompt === "followup"}
         onClose={() => setPrompt(null)}
-        title="Set next follow-up"
+        title="Set Next Follow-Up"
         description="The records status stays “Records request needed”; only the follow-up date moves."
       >
         <SlotForm
@@ -157,7 +157,7 @@ export function QuickActions({
       <Dialog
         open={prompt === "decline"}
         onClose={() => setPrompt(null)}
-        title="Patient declined"
+        title="Patient Declined"
         description="This closes the referral as Declined. It can be undone later only with Correct status."
       >
         <ReasonForm

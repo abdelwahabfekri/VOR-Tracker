@@ -65,7 +65,7 @@ const INITIAL = 8;
 export function ScanHistory({ entries }: { entries: StatusHistoryEntry[] }) {
   const [all, setAll] = useState(false);
   if (entries.length === 0) {
-    return <EmptyState icon="history" title="No activity yet" compact>Every call, status change and correction will be listed here.</EmptyState>;
+    return <EmptyState icon="history" title="No Activity Yet" compact>Every call, status change and correction will be listed here.</EmptyState>;
   }
 
   const sorted = [...entries].sort((a, b) => b.changed_at.localeCompare(a.changed_at)); // newest first

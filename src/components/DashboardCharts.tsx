@@ -90,7 +90,7 @@ export function DashboardCharts({ referrals, showClosures }: { referrals: Referr
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <ChartCard title="Referrals by provider" delay={0}>
+      <ChartCard title="Referrals by Provider" delay={0}>
         {empty ? <NoData /> : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={providerData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
@@ -106,7 +106,7 @@ export function DashboardCharts({ referrals, showClosures }: { referrals: Referr
         )}
       </ChartCard>
 
-      <ChartCard title="Appointment status mix" delay={1}>
+      <ChartCard title="Appointment Status Mix" delay={1}>
         {empty ? <NoData /> : (
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
@@ -120,7 +120,7 @@ export function DashboardCharts({ referrals, showClosures }: { referrals: Referr
         )}
       </ChartCard>
 
-      <ChartCard title="Open referral aging" delay={2}>
+      <ChartCard title="Open Referral Aging" delay={2}>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={agingData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID} />
@@ -133,7 +133,7 @@ export function DashboardCharts({ referrals, showClosures }: { referrals: Referr
       </ChartCard>
 
       {showClosures && (
-        <ChartCard title="How referrals closed" delay={3}>
+        <ChartCard title="How Referrals Closed" delay={3}>
           {hasClosures ? (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={closureData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
@@ -148,7 +148,7 @@ export function DashboardCharts({ referrals, showClosures }: { referrals: Referr
             </ResponsiveContainer>
           ) : (
             <div className="flex h-[260px] items-center justify-center">
-              <EmptyState icon="archive" title="No closed referrals yet" compact>Closures will be charted here.</EmptyState>
+              <EmptyState icon="archive" title="No Closed Referrals Yet" compact>Closures will be charted here.</EmptyState>
             </div>
           )}
         </ChartCard>
@@ -171,7 +171,7 @@ function ChartCard({ title, delay, children }: { title: string; delay: number; c
 function NoData() {
   return (
     <div className="flex h-[260px] items-center justify-center">
-      <EmptyState icon="chart" title="No referrals in this range" compact />
+      <EmptyState icon="chart" title="No Referrals in This Range" compact />
     </div>
   );
 }

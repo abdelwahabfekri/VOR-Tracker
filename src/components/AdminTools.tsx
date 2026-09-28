@@ -26,14 +26,14 @@ export function AdminTools({ referral, providers }: { referral: Referral; provid
   const close = () => setPanel(null);
 
   const tools: { key: Panel; label: string; help: string; icon: IconName; show: boolean }[] = [
-    { key: "edit", label: "Edit details", help: "MRN, provider, specialist, dates", icon: "edit", show: true },
-    { key: "followup", label: "Set follow-up date", help: "Move the next due date only", icon: "clock", show: isActive(referral) },
-    { key: "correct", label: "Correct status", help: "Fix a status entered by mistake", icon: "sliders", show: true },
+    { key: "edit", label: "Edit Details", help: "MRN, provider, specialist, dates", icon: "edit", show: true },
+    { key: "followup", label: "Set Follow-Up Date", help: "Move the next due date only", icon: "clock", show: isActive(referral) },
+    { key: "correct", label: "Correct Status", help: "Fix a status entered by mistake", icon: "sliders", show: true },
   ];
 
   return (
     <Card className="p-5 md:p-6" tone="neutral">
-      <SectionHeading title="Admin controls" icon="sliders" eyebrow="Administrator" />
+      <SectionHeading title="Admin Controls" icon="sliders" eyebrow="Administrator" />
       <div className="grid gap-2.5 sm:grid-cols-3">
         {tools.filter((t) => t.show).map((t) => (
           <button
@@ -52,15 +52,15 @@ export function AdminTools({ referral, providers }: { referral: Referral; provid
         ))}
       </div>
 
-      <Dialog open={panel === "edit"} onClose={close} variant="drawer" title="Edit details"
+      <Dialog open={panel === "edit"} onClose={close} variant="drawer" title="Edit Details"
         description="Changes descriptive details only. Statuses change through actions or Correct status.">
         <EditDetails referral={referral} providers={providers} onDone={close} />
       </Dialog>
-      <Dialog open={panel === "followup"} onClose={close} title="Set follow-up date"
+      <Dialog open={panel === "followup"} onClose={close} title="Set Follow-Up Date"
         description="Only the date changes — the status stays as it is.">
         <SetFollowup referral={referral} onDone={close} />
       </Dialog>
-      <Dialog open={panel === "correct"} onClose={close} title="Correct status"
+      <Dialog open={panel === "correct"} onClose={close} title="Correct Status"
         description={<>Fixes a status entered by mistake. History is kept: a “Status corrected” entry is added with your reason.</>}>
         <CorrectStatus referral={referral} onDone={close} />
       </Dialog>

@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui";
 export function NotesSection({ entries }: { entries: StatusHistoryEntry[] }) {
   const notes = entries.filter((e) => e.note_text);
   if (notes.length === 0) {
-    return <EmptyState icon="note" title="No notes yet" compact>Notes added with an action show up here.</EmptyState>;
+    return <EmptyState icon="note" title="No Notes Yet" compact>Notes added with an action show up here.</EmptyState>;
   }
   return (
     <ul className="space-y-2.5">

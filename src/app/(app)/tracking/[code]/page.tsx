@@ -81,7 +81,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
         </Card>
 
         <Card className="p-5 md:p-6">
-          <SectionHeading title="Operational details" icon="clock" />
+          <SectionHeading title="Operational Details" icon="clock" />
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
             <Field label="Appointment" value={referral.appointment_slot ? fmtDateTime(referral.appointment_slot) : null} />
             <Field label="Next follow-up" value={referral.next_action_due ? fmtDateTime(referral.next_action_due) : null} />
@@ -103,7 +103,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="min-w-0 space-y-6 lg:col-span-3">
           <Card className="p-5 md:p-6">
-            <SectionHeading title="Call log" icon="phone" />
+            <SectionHeading title="Call Log" icon="phone" />
             <CallLogTable entries={history} />
           </Card>
           <Card className="p-5 md:p-6">
@@ -112,7 +112,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
           </Card>
         </div>
         <Card className="min-w-0 p-5 md:p-6 lg:col-span-2">
-          <SectionHeading title="Activity timeline" icon="history" />
+          <SectionHeading title="Activity Timeline" icon="history" />
           <ScanHistory entries={history} />
         </Card>
       </div>

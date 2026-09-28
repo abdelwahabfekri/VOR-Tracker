@@ -29,7 +29,7 @@ export default async function WeeklyReportsPage({
   const showChange = searchParams.change !== "0";
 
   if (!provider) {
-    return <Card><EmptyState icon="user" title="No active internal providers">Add or reactivate a provider to build a report.</EmptyState></Card>;
+    return <Card><EmptyState icon="user" title="No Active Internal Providers">Add or reactivate a provider to build a report.</EmptyState></Card>;
   }
 
   const referrals = await getReferrals(provider.id);

@@ -41,7 +41,7 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
             <Icon name="trash" className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-overdue">Danger zone</h2>
+            <h2 className="text-sm font-semibold text-overdue">Danger Zone</h2>
             <p className="text-sm text-muted">Permanently delete this referral and its history. This cannot be undone.</p>
           </div>
         </div>
@@ -54,7 +54,7 @@ export function DeleteReferral({ referral }: { referral: Referral }) {
       <Dialog
         open={open}
         onClose={close}
-        title="Delete this referral?"
+        title="Delete This Referral?"
         description={<>The referral, its journey and its full history are removed for everyone. <strong className="text-ink">This cannot be undone.</strong></>}
       >
         <form onSubmit={confirm} className="space-y-4">
