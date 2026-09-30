@@ -15,7 +15,19 @@ import { Spinner } from "@/components/ui";
 // referral.
 //   onAction resolves true on success; typed input is kept on failure so the
 //   user can retry.
-type Prompt = null | "book" | "reschedule" | "decline" | "followup";
+//
+// Major milestones also require the user to confirm the patient's eCW note is
+// updated before the action is saved (the tracker cannot write to eCW itself).
+type Prompt = null | "book" | "reschedule" | "decline" | "followup" | "ecw";
+
+export const ECW_NOTE_ACTIONS: ReadonlySet<Action["kind"]> = new Set<Action["kind"]>([
+  "book_appointment", // Scheduled
+  "mark_completed",   // Visit completed
+  "doc_received",     // Records received
+  "close",            // Filed & closed
+  "patient_declined", // journey ended
+  "cancel",           // journey ended
+]);
 
 type Btn = {
   label: string;
@@ -37,6 +49,7 @@ export function QuickActions({
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [ecwPending, setEcwPending] = useState<{ label: string; action: Action } | null>(null);
   const a = referral.appointment_state;
   const d = referral.document_state;
 
@@ -55,7 +68,15 @@ export function QuickActions({
     return ok;
   }
 
-  const instant = (label: string, kind: Btn["kind"], action: Action): Btn => ({ label, kind, run: () => fire(label, action) });
+  const instant = (label: string, kind: Btn["kind"], action: Action): Btn => ({
+    label,
+    kind,
+    run: () => {
+      if (!ECW_NOTE_ACTIONS.has(action.kind)) return void fire(label, action);
+      setEcwPending({ label, action });
+      setPrompt("ecw");
+    },
+  });
   const open = (label: string, kind: Btn["kind"], p: Exclude<Prompt, null>): Btn => ({ label, kind, run: () => setPrompt(p) });
 
   let buttons: Btn[] = [];
@@ -135,6 +156,7 @@ export function QuickActions({
       >
         <SlotForm
           confirmLabel={prompt === "reschedule" ? "Save New Date" : "Book Appointment"}
+          ecwCheck={prompt === "book"}
           onPick={(slot, n) => fromPrompt(prompt === "reschedule" ? { kind: "reschedule", slot } : { kind: "book_appointment", slot }, n)}
           onCancel={() => setPrompt(null)}
         />
@@ -162,11 +184,80 @@ export function QuickActions({
       >
         <ReasonForm
           confirmLabel="Confirm Decline"
+          ecwCheck
           onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
           onCancel={() => setPrompt(null)}
         />
       </Dialog>
+
+      <Dialog
+        open={prompt === "ecw"}
+        onClose={() => setPrompt(null)}
+        title="Update eCW Note"
+        description="This is a major milestone. Update the patient’s note in eCW before saving it here."
+      >
+        <EcwConfirmForm
+          confirmLabel={ecwPending ? `Save: ${ecwPending.label}` : "Save"}
+          danger={ecwPending?.action.kind === "cancel"}
+          onConfirm={async () => {
+            if (!ecwPending) return false;
+            const ok = await onAction(ecwPending.action, note.trim() || undefined);
+            if (ok) {
+              setNote("");
+              setPrompt(null);
+              setEcwPending(null);
+            }
+            return ok;
+          }}
+          onCancel={() => setPrompt(null)}
+        />
+      </Dialog>
     </div>
+  );
+}
+
+// Required acknowledgement on every major-milestone save.
+function EcwCheck({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-start gap-2 rounded-ctl bg-soon-soft px-3 py-2 text-sm text-soon">
+      <input type="checkbox" className="mt-0.5" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>I’ve updated the patient’s note in eCW for this milestone.</span>
+    </label>
+  );
+}
+
+function EcwConfirmForm({
+  onConfirm,
+  onCancel,
+  confirmLabel,
+  danger,
+}: {
+  onConfirm: () => Promise<boolean>;
+  onCancel: () => void;
+  confirmLabel: string;
+  danger?: boolean;
+}) {
+  const [ack, setAck] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!ack) return;
+    setPending(true);
+    await onConfirm();
+    setPending(false);
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <EcwCheck checked={ack} onChange={setAck} />
+      <div className="flex justify-end gap-2 pt-1">
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="submit" className={danger ? "btn btn-danger-solid" : "btn btn-primary"} disabled={!ack || pending}>
+          {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -176,22 +267,26 @@ function SlotForm({
   initial = "",
   confirmLabel = "Set",
   warnPast,
+  ecwCheck,
 }: {
   onPick: (slot: string, note?: string) => Promise<boolean>;
   onCancel: () => void;
   initial?: string;
   confirmLabel?: string;
   warnPast?: boolean;
+  ecwCheck?: boolean;
 }) {
   const [val, setVal] = useState(initial ? isoToNyInput(initial) : "");
   const [note, setNote] = useState("");
   const [ackPast, setAckPast] = useState(false);
+  const [ackEcw, setAckEcw] = useState(false);
   const [pending, setPending] = useState(false);
   const inPast = warnPast && !!val && new Date(nyInputToIso(val)).getTime() < Date.now();
+  const blocked = !val || (inPast && !ackPast) || (ecwCheck && !ackEcw);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!val || (inPast && !ackPast)) return;
+    if (blocked) return;
     setPending(true);
     await onPick(nyInputToIso(val), note.trim() || undefined);
     setPending(false);
@@ -213,9 +308,10 @@ function SlotForm({
           That date is in the past — the referral will show as overdue right away.
         </label>
       )}
+      {ecwCheck && <EcwCheck checked={ackEcw} onChange={setAckEcw} />}
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn btn-primary" disabled={!val || pending || (inPast && !ackPast)}>
+        <button type="submit" className="btn btn-primary" disabled={blocked || pending}>
           {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
         </button>
       </div>
@@ -227,16 +323,20 @@ function ReasonForm({
   onConfirm,
   onCancel,
   confirmLabel = "Confirm",
+  ecwCheck,
 }: {
   onConfirm: (reason?: string) => Promise<boolean>;
   onCancel: () => void;
   confirmLabel?: string;
+  ecwCheck?: boolean;
 }) {
   const [reason, setReason] = useState("");
+  const [ackEcw, setAckEcw] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (ecwCheck && !ackEcw) return;
     setPending(true);
     await onConfirm(reason.trim() || undefined);
     setPending(false);
@@ -248,9 +348,10 @@ function ReasonForm({
         <label className="field-label" htmlFor="reason">Reason <span className="font-normal text-muted">(optional)</span></label>
         <input id="reason" type="text" value={reason} onChange={(e) => setReason(e.target.value)} className="field" autoFocus />
       </div>
+      {ecwCheck && <EcwCheck checked={ackEcw} onChange={setAckEcw} />}
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn btn-danger-solid" disabled={pending}>
+        <button type="submit" className="btn btn-danger-solid" disabled={pending || (ecwCheck && !ackEcw)}>
           {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
         </button>
       </div>
