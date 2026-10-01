@@ -6,5 +6,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.*\\.png|.*\\.svg).*)"],
+  // Static images and app icons load before sign-in (login page, browser tab).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|.*\\.png|.*\\.svg).*)"],
 };

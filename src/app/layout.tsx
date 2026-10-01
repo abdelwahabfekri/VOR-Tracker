@@ -21,7 +21,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Referral Tracker — Aizer Vision",
+  title: "VOR Tracker — Aizer Vision",
   description: "Vision Department referral tracking. Operational data plus patient MRN.",
 };
 

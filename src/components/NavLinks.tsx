@@ -42,7 +42,7 @@ export function TopNav({
       <div className="relative mx-auto flex w-full max-w-[1280px] flex-wrap items-center gap-x-4 xl:flex-nowrap gap-y-3 px-4 py-3 md:px-8">
         {/* Left: logo + nav links */}
         <Link href="/tracking" className="flex shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:shadow-glow-star">
-          <Image src="/logo-white.png" alt="Aizer — Referral Tracker" width={92} height={26} priority />
+          <Image src="/vor-logo-white.png" alt="VOR Tracker" width={77} height={32} priority />
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 xl:flex">
