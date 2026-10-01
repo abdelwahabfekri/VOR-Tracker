@@ -20,9 +20,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
 
-      <footer className="px-6 py-5 text-center text-xs text-muted">
-        Operational tracking · MRN is the only patient identifier stored here
-      </footer>
       <Toaster />
     </div>
   );

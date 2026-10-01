@@ -110,8 +110,6 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
           </div>
         </fieldset>
 
-        <PrivacyNote />
-
         <InlineError>{error}</InlineError>
 
         <button type="submit" disabled={pending} className="btn btn-primary w-full py-3">
@@ -119,15 +117,6 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
         </button>
       </form>
     </Card>
-  );
-}
-
-export function PrivacyNote() {
-  return (
-    <div className="flex items-start gap-2.5 rounded-ctl bg-canvas px-4 py-3 text-xs text-muted ring-1 ring-inset ring-line">
-      <Icon name="info" className="mt-px h-4 w-4 text-navy" />
-      MRN is the only patient identifier stored here. Do not enter patient names, dates of birth, or clinical details in any field.
-    </div>
   );
 }
 

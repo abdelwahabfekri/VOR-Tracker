@@ -16,7 +16,7 @@ import {
 } from "@/lib/existingReferral";
 import { Card, ApptChip, DocChip, InlineError, Mrn, Spinner } from "@/components/ui";
 import { Icon, type IconName } from "@/components/Icon";
-import { PrivacyNote, SuccessCard } from "@/components/NewReferralForm";
+import { SuccessCard } from "@/components/NewReferralForm";
 import { fmtDate, fmtDateTime, isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 const input = "field";
@@ -299,8 +299,6 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
       {(stepError || (tried && (error || problem))) && (
         <InlineError>{stepError ?? error ?? problem}</InlineError>
       )}
-
-      <PrivacyNote />
 
       <div className="flex items-center justify-between gap-3">
         <button type="button" className="btn btn-ghost" onClick={back} disabled={step === 0}>
