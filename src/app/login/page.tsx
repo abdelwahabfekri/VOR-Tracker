@@ -80,11 +80,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        {/* The app stores patient MRNs, so it must not claim to hold no patient data. */}
-        <p className="mt-5 text-center text-xs text-star-200/70">
-          Contains patient MRNs (PHI) · Authorized staff only
-        </p>
       </div>
     </div>
   );
