@@ -372,11 +372,19 @@ export function applyAction(r: Referral, action: Action, nowDate: Date = new Dat
 }
 
 // ---------------------------------------------------------------------------
-// Why the patient declined, from the referral's history: the latest decline
-// event (or the existing-referral baseline that entered it as declined). The
-// note may be "<reason> — <details>". Null when no reason was recorded (e.g.
-// declines logged before reasons existed, or set via Correct status).
+// Decline reasons go to providers only through the weekly report email.
+//   isDeclineReasonEvent: a history row whose note is the decline reason —
+//   a decline action, or the existing-referral baseline entered as declined.
+//   declineReason: the latest such reason ("<reason> — <details>"). Null when
+//   none was recorded (declines logged before reasons existed, or set via
+//   Correct status, whose note is the correction reason instead).
 // ---------------------------------------------------------------------------
+export function isDeclineReasonEvent(h: StatusHistoryEntry): boolean {
+  const code = (h.note_code ?? "").replace(/^inbound_/, "");
+  if (code === "declined") return h.track === "appointment" && h.to_state === "patient_declined";
+  return code === "existing_baseline" && h.to_state.startsWith("patient_declined/");
+}
+
 export function declineReason(history: StatusHistoryEntry[]): string | null {
   const desc = [...history].sort((a, b) => b.changed_at.localeCompare(a.changed_at));
   const e = desc.find(
@@ -384,8 +392,7 @@ export function declineReason(history: StatusHistoryEntry[]): string | null {
       (h.track === "appointment" && h.to_state === "patient_declined") ||
       (h.note_code === "existing_baseline" && h.to_state.startsWith("patient_declined/"))
   );
-  const code = (e?.note_code ?? "").replace(/^inbound_/, "");
-  return e && (code === "declined" || code === "existing_baseline") ? e.note_text?.trim() || null : null;
+  return e && isDeclineReasonEvent(e) ? e.note_text?.trim() || null : null;
 }
 
 // ---------------------------------------------------------------------------

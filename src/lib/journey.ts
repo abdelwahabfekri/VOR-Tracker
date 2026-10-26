@@ -14,7 +14,6 @@
 import type { AppointmentStatus, DocumentStatus, Referral, StatusHistoryEntry } from "./types";
 import type { IconName } from "@/components/Icon";
 import { firstReachedMap } from "./callLog";
-import { declineReason } from "./statusEngine";
 
 export type MilestoneTrack = "appt" | "docs";
 export type MilestoneState =
@@ -96,8 +95,6 @@ export interface JourneyModel {
   current: Milestone | null;
   // why an ended journey stopped
   endedLabel: string | null;
-  // the patient's stated reason, when the journey ended with a decline
-  endedReason: string | null;
 }
 
 // The state a terminal event left from (e.g. declined while Scheduled).
@@ -115,14 +112,12 @@ export function buildJourney(r: Referral, history: StatusHistoryEntry[] = []): J
   let stage: number;         // index of the current stage (or TOTAL when done)
   let phase: JourneyPhase = "active";
   let endedLabel: string | null = null;
-  let endedReason: string | null = null;
 
   if (a === "patient_declined" || a === "cancelled") {
     const from = stoppedFrom(history, "appointment", a) as AppointmentStatus | null;
     stage = from && from !== a ? Math.min(apptStage(from), APPT_COUNT - 1) : 1;
     phase = "ended";
     endedLabel = a === "cancelled" ? "Referral cancelled" : "Patient declined the referral";
-    if (a === "patient_declined") endedReason = declineReason(history);
   } else if (a !== "appointment_completed") {
     stage = apptStage(a);
   } else if (d === "documents_unavailable") {
@@ -165,7 +160,6 @@ export function buildJourney(r: Referral, history: StatusHistoryEntry[] = []): J
     recordsUnlocked,
     current,
     endedLabel,
-    endedReason,
   };
 }
 

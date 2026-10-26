@@ -158,7 +158,7 @@ export function QuickActions({
         open={prompt === "decline"}
         onClose={() => setPrompt(null)}
         title="Patient Declined"
-        description="This closes the referral as Declined. The reason is shown to the referring provider. It can be undone later only with Correct status."
+        description="This closes the referral as Declined. The reason goes to the referring provider in the weekly report email. It can be undone later only with Correct status."
       >
         <DeclineForm
           onConfirm={(reason, details) => fromPrompt({ kind: "patient_declined", reason }, details)}
@@ -266,7 +266,7 @@ function DeclineForm({
           placeholder="e.g. Wants an office closer to home"
           required={needsDetails}
         />
-        <p className="mt-1 text-xs text-muted">Visible to the provider. No clinical details.</p>
+        <p className="mt-1 text-xs text-muted">Included in the provider’s weekly report email. No clinical details.</p>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
