@@ -9,7 +9,7 @@
 
 import type { AppointmentStatus, DocumentStatus } from "./types";
 import { TERMINAL_APPT, TERMINAL_DOC } from "./types";
-import { CAPS, isDeclineReason, suggestDue, type HistoryEvent, type TransitionFields } from "./statusEngine";
+import { CAPS, suggestDue, type HistoryEvent, type TransitionFields } from "./statusEngine";
 
 export const EXISTING_APPT_STATES: AppointmentStatus[] = [
   "referral_created",
@@ -130,8 +130,8 @@ export function validateExisting(i: ExistingReferralInput, now: Date = new Date(
   if (need.unavailableReason && !(UNAVAILABLE_REASONS as readonly string[]).includes(i.unavailable_reason ?? "")) {
     return "Pick why the records are unavailable.";
   }
-  if (need.declineReason && !isDeclineReason(i.decline_reason)) {
-    return "Pick why the patient declined.";
+  if (need.declineReason && !i.decline_reason?.trim()) {
+    return "Enter why the patient declined.";
   }
 
   if (i.last_action_at) {
@@ -201,7 +201,7 @@ export function buildExisting(
         // "<appointment_state>/<document_state>" — the stage it entered the tracker at
         to: `${i.appointment_state}/${i.document_state}`,
         note_code: "existing_baseline",
-        note_text: need.unavailableReason ? i.unavailable_reason : need.declineReason ? i.decline_reason : null,
+        note_text: need.unavailableReason ? i.unavailable_reason : need.declineReason ? i.decline_reason?.trim() || null : null,
       },
     ],
   };

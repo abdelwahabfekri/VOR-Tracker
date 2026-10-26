@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AppointmentStatus, DocumentStatus, ReferringProvider } from "@/lib/types";
+import type { AppointmentStatus, DocumentStatus, ReferringProvider, SavedSpecialist } from "@/lib/types";
 import { APPT_LABEL, DOC_LABEL } from "@/lib/types";
 import { createExistingReferral } from "@/lib/actions";
 import {
@@ -17,8 +17,8 @@ import {
 import { Card, ApptChip, DocChip, InlineError, Mrn, Spinner } from "@/components/ui";
 import { Icon, type IconName } from "@/components/Icon";
 import { SuccessCard } from "@/components/NewReferralForm";
+import { SpecialistFields } from "@/components/SpecialistFields";
 import { fmtDate, fmtDateTime, isoToNyInput, nyInputToIso } from "@/lib/tz";
-import { DECLINE_REASONS } from "@/lib/statusEngine";
 
 const input = "field";
 const label = "field-label";
@@ -27,7 +27,7 @@ const today = () => isoToNyInput(new Date().toISOString()).slice(0, 10);
 const dayIso = (ymd: string) => (ymd ? nyInputToIso(`${ymd}T00:00`) : null);
 const dtIso = (v: string) => (v ? nyInputToIso(v) : null);
 
-export function ExistingReferralForm({ providers }: { providers: ReferringProvider[] }) {
+export function ExistingReferralForm({ providers, saved }: { providers: ReferringProvider[]; saved: SavedSpecialist[] }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,23 +163,11 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
               <label htmlFor="ex-open" className={label}>Original open date</label>
               <input id="ex-open" type="date" className={`${input} num`} value={f.open} max={today()} onChange={(e) => set("open", e.target.value)} required />
             </div>
-            <div>
-              <label htmlFor="ex-sname" className={label}>Specialist name</label>
-              <input id="ex-sname" className={input} value={f.specialist_name} onChange={(e) => set("specialist_name", e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="ex-spec" className={label}>Specialty</label>
-              <input id="ex-spec" className={input} value={f.specialty} onChange={(e) => set("specialty", e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="ex-phone" className={label}>Specialist phone <span className="font-normal text-muted">(optional)</span></label>
-              <input id="ex-phone" className={`${input} num`} value={f.specialist_phone} onChange={(e) => set("specialist_phone", e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="ex-fax" className={label}>Specialist fax <span className="font-normal text-muted">(optional)</span></label>
-              <input id="ex-fax" className={`${input} num`} value={f.specialist_fax} onChange={(e) => set("specialist_fax", e.target.value)} />
-            </div>
           </div>
+          <fieldset className="mt-5 rounded-xl2 border border-line bg-surface-neutral p-4">
+            <legend className="px-1 text-sm font-semibold text-ink">Specialist</legend>
+            <SpecialistFields idPrefix="ex" value={f} onChange={(s) => setF((cur) => ({ ...cur, ...s }))} saved={saved} />
+          </fieldset>
         </StepCard>
       )}
 
@@ -243,10 +231,8 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
             {need.declineReason && (
               <div>
                 <label htmlFor="ex-decline" className={label}>Reason for decline</label>
-                <select id="ex-decline" className={input} value={f.decline_reason} onChange={(e) => set("decline_reason", e.target.value)} required>
-                  <option value="">Choose…</option>
-                  {DECLINE_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
+                <input id="ex-decline" className={input} value={f.decline_reason} onChange={(e) => set("decline_reason", e.target.value)} placeholder="e.g. Wants an office closer to home" required />
+                <p className="field-help">Visible to the provider. No clinical details.</p>
               </div>
             )}
             {need.contactAttempts && (

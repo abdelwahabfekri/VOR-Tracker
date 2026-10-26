@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Referral } from "@/lib/types";
-import { DECLINE_REASONS, type Action, type DeclineReason } from "@/lib/statusEngine";
+import type { Action } from "@/lib/statusEngine";
 import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
@@ -161,7 +161,7 @@ export function QuickActions({
         description="This closes the referral as Declined. The reason is shown to the referring provider. It can be undone later only with Correct status."
       >
         <DeclineForm
-          onConfirm={(reason, details) => fromPrompt({ kind: "patient_declined", reason }, details)}
+          onConfirm={(reason) => fromPrompt({ kind: "patient_declined", reason })}
           onCancel={() => setPrompt(null)}
         />
       </Dialog>
@@ -226,21 +226,17 @@ function DeclineForm({
   onConfirm,
   onCancel,
 }: {
-  onConfirm: (reason: DeclineReason, details?: string) => Promise<boolean>;
+  onConfirm: (reason: string) => Promise<boolean>;
   onCancel: () => void;
 }) {
-  const [reason, setReason] = useState<DeclineReason | "">("");
-  const [details, setDetails] = useState("");
+  const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
-  // "Other" says nothing on its own, so it needs the details filled in.
-  const needsDetails = reason === "Other";
-  const ready = !!reason && (!needsDetails || !!details.trim());
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!reason || !ready) return;
+    if (!reason.trim()) return;
     setPending(true);
-    await onConfirm(reason, details.trim() || undefined);
+    await onConfirm(reason.trim());
     setPending(false);
   }
 
@@ -248,29 +244,20 @@ function DeclineForm({
     <form onSubmit={submit} className="space-y-4">
       <div>
         <label className="field-label" htmlFor="decline-reason">Reason for decline</label>
-        <select id="decline-reason" value={reason} onChange={(e) => setReason(e.target.value as DeclineReason | "")} className="field" required autoFocus>
-          <option value="">Choose…</option>
-          {DECLINE_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="field-label" htmlFor="decline-details">
-          Details {needsDetails ? null : <span className="font-normal text-muted">(optional)</span>}
-        </label>
-        <input
-          id="decline-details"
-          type="text"
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          className="field"
+        <textarea
+          id="decline-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="field min-h-[84px]"
           placeholder="e.g. Wants an office closer to home"
-          required={needsDetails}
+          required
+          autoFocus
         />
         <p className="mt-1 text-xs text-muted">Visible to the provider. No clinical details.</p>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn btn-danger-solid" disabled={pending || !ready}>
+        <button type="submit" className="btn btn-danger-solid" disabled={pending || !reason.trim()}>
           {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : "Confirm Decline"}
         </button>
       </div>

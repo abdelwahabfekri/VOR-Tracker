@@ -28,23 +28,6 @@ const DAY = 24 * HOUR;
 
 export const CAPS = { contact: 5, reschedule: 3, document: 3 } as const;
 
-// Structured reasons a patient declined — shown to providers on the referral
-// and in the weekly report. Non-clinical on purpose: no diagnoses or PHI.
-export const DECLINE_REASONS = [
-  "Not interested / does not feel it is needed",
-  "Prefers a different specialist or practice",
-  "Already seen or scheduled elsewhere",
-  "Insurance or cost concerns",
-  "Transportation or distance",
-  "Could not find a time that works",
-  "Other",
-] as const;
-export type DeclineReason = (typeof DECLINE_REASONS)[number];
-
-export function isDeclineReason(s: string | null | undefined): s is DeclineReason {
-  return (DECLINE_REASONS as readonly string[]).includes(s ?? "");
-}
-
 // ---- Actions the admin can take ----------------------------------------
 export type Action =
   // Track 1
@@ -56,7 +39,7 @@ export type Action =
   | { kind: "mark_completed" }         // post-call: visit happened
   | { kind: "mark_no_show" }           // post-call: no-show -> silent revert
   | { kind: "reschedule"; slot: string }
-  | { kind: "patient_declined"; reason: DeclineReason }
+  | { kind: "patient_declined"; reason: string } // free text, shown to providers
   | { kind: "cancel" }
   | { kind: "reopen_contact" }         // re-engage a parked (not-replying) referral
   // Track 2
@@ -157,8 +140,8 @@ export function assertAllowed(r: Referral, action: Action): void {
   if ((action.kind === "book_appointment" || action.kind === "reschedule") && isNaN(Date.parse(action.slot))) {
     throw new Error("Pick a valid appointment date.");
   }
-  if (action.kind === "patient_declined" && !isDeclineReason(action.reason)) {
-    throw new Error("Pick why the patient declined.");
+  if (action.kind === "patient_declined" && !action.reason?.trim()) {
+    throw new Error("Enter why the patient declined.");
   }
 }
 
@@ -297,7 +280,7 @@ export function applyAction(r: Referral, action: Action, nowDate: Date = new Dat
     case "patient_declined":
       return {
         fields: { appointment_state: "patient_declined", next_action_due: null, last_action_at: nowIso, closed_at: nowIso },
-        events: [{ ...appt("patient_declined", "declined"), note_text: action.reason }],
+        events: [{ ...appt("patient_declined", "declined"), note_text: action.reason.trim() }],
       };
 
     case "cancel":
@@ -374,7 +357,7 @@ export function applyAction(r: Referral, action: Action, nowDate: Date = new Dat
 // ---------------------------------------------------------------------------
 // Why the patient declined, from the referral's history: the latest decline
 // event (or the existing-referral baseline that entered it as declined). The
-// note may be "<reason> — <details>". Null when no reason was recorded (e.g.
+// note may be "<reason> — <note>". Null when no reason was recorded (e.g.
 // declines logged before reasons existed, or set via Correct status).
 // ---------------------------------------------------------------------------
 export function declineReason(history: StatusHistoryEntry[]): string | null {

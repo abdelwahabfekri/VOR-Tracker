@@ -2,15 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ReferringProvider } from "@/lib/types";
+import type { ReferringProvider, SavedSpecialist } from "@/lib/types";
 import { createReferral } from "@/lib/actions";
 import { Card, CodeChip, InlineError, Mrn, Spinner } from "@/components/ui";
 import { Icon } from "@/components/Icon";
+import { SpecialistFields } from "@/components/SpecialistFields";
 import { isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 const MRN_MAX_LENGTH = 32; // mirrors the mrn_format check in schema.sql
 
-export function NewReferralForm({ providers }: { providers: ReferringProvider[] }) {
+export function NewReferralForm({ providers, saved }: { providers: ReferringProvider[]; saved: SavedSpecialist[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [created, setCreated] = useState<{ code: string; mrn: string } | null>(null);
@@ -90,24 +91,12 @@ export function NewReferralForm({ providers }: { providers: ReferringProvider[] 
 
         <fieldset className="rounded-xl2 border border-line bg-surface-neutral p-4">
           <legend className="px-1 text-sm font-semibold text-ink">Specialist</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="nr-sname" className="field-label">Specialist name</label>
-              <input id="nr-sname" value={form.specialist_name} onChange={(e) => set("specialist_name", e.target.value)} className="field" placeholder="e.g. Retina Associates" />
-            </div>
-            <div>
-              <label htmlFor="nr-spec" className="field-label">Specialty</label>
-              <input id="nr-spec" value={form.specialty} onChange={(e) => set("specialty", e.target.value)} className="field" placeholder="e.g. Retina" />
-            </div>
-            <div>
-              <label htmlFor="nr-phone" className="field-label">Phone <span className="font-normal text-muted">(optional)</span></label>
-              <input id="nr-phone" value={form.specialist_phone} onChange={(e) => set("specialist_phone", e.target.value)} className="field num" />
-            </div>
-            <div>
-              <label htmlFor="nr-fax" className="field-label">Fax <span className="font-normal text-muted">(optional)</span></label>
-              <input id="nr-fax" value={form.specialist_fax} onChange={(e) => set("specialist_fax", e.target.value)} className="field num" />
-            </div>
-          </div>
+          <SpecialistFields
+            idPrefix="nr"
+            value={form}
+            onChange={(s) => setForm((f) => ({ ...f, ...s }))}
+            saved={saved}
+          />
         </fieldset>
 
         <InlineError>{error}</InlineError>

@@ -38,6 +38,14 @@ export interface ReferringProvider {
   report_email: string | null;
 }
 
+// A specialist contact remembered from earlier referrals (business contact, not PHI).
+export interface SavedSpecialist {
+  specialist_name: string;
+  specialty: string;
+  specialist_phone: string;
+  specialist_fax: string;
+}
+
 export interface Referral {
   id: string;
   code: string; // VOR-#######

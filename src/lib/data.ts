@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Referral, ReferringProvider, StatusHistoryEntry, AppUser } from "./types";
+import type { Referral, ReferringProvider, SavedSpecialist, StatusHistoryEntry, AppUser } from "./types";
 
 // A failed query must never look like "no data" — an empty list would make
 // referrals appear to vanish. Log a safe summary (code + message, never row
@@ -27,6 +27,34 @@ export async function getProviders(): Promise<ReferringProvider[]> {
     .order("name");
   if (error) fail("providers", error);
   return (data as ReferringProvider[]) ?? [];
+}
+
+// Specialists used on earlier referrals, for re-use in the forms. One entry per
+// name + specialty (case-insensitive); the most recently updated referral wins,
+// so a corrected phone or fax carries forward.
+export async function getSavedSpecialists(): Promise<SavedSpecialist[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("referrals")
+    .select("specialist_name, specialty, specialist_phone, specialist_fax")
+    .not("specialist_name", "is", null)
+    .order("updated_at", { ascending: false });
+  if (error) fail("saved specialists", error);
+  const seen = new Map<string, SavedSpecialist>();
+  for (const r of (data ?? []) as Record<string, string | null>[]) {
+    const name = (r.specialist_name ?? "").trim();
+    if (!name) continue;
+    const specialty = (r.specialty ?? "").trim();
+    const key = `${name.toLowerCase()}|${specialty.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.set(key, {
+      specialist_name: name,
+      specialty,
+      specialist_phone: (r.specialist_phone ?? "").trim(),
+      specialist_fax: (r.specialist_fax ?? "").trim(),
+    });
+  }
+  return [...seen.values()].sort((a, b) => a.specialist_name.localeCompare(b.specialist_name) || a.specialty.localeCompare(b.specialty));
 }
 
 export async function getReferrals(providerId?: string): Promise<Referral[]> {

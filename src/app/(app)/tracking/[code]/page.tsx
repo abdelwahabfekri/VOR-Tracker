@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { getMe, getReferralByCode, getHistory, getProviders } from "@/lib/data";
+import { getMe, getReferralByCode, getHistory, getProviders, getSavedSpecialists } from "@/lib/data";
 import { ReferralJourney } from "@/components/TrackProgress";
 import { CodeChip, ApptChip, DocChip, AttemptBadge, Card, StaleChip, Mrn, SectionHeading } from "@/components/ui";
 import { Icon } from "@/components/Icon";
@@ -22,9 +22,10 @@ export default async function ReferralDetail({ params }: { params: { code: strin
   const referral = await getReferralByCode(params.code);
   if (!referral) notFound();
   const isAdmin = me.role === "admin";
-  const [history, providers] = await Promise.all([
+  const [history, providers, saved] = await Promise.all([
     getHistory(referral.id),
     isAdmin ? getProviders() : Promise.resolve([]),
+    isAdmin ? getSavedSpecialists() : Promise.resolve([]),
   ]);
 
   return (
@@ -120,7 +121,7 @@ export default async function ReferralDetail({ params }: { params: { code: strin
       {/* 7. Admin controls */}
       {isAdmin && (
         <div className="space-y-4 pt-2">
-          <AdminTools referral={referral} providers={providers} />
+          <AdminTools referral={referral} providers={providers} saved={saved} />
           <DeleteReferral referral={referral} />
         </div>
       )}
