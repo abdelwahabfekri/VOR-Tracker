@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AppointmentStatus, DocumentStatus, Referral, ReferringProvider } from "@/lib/types";
+import type { AppointmentStatus, DocumentStatus, Referral, ReferringProvider, SavedSpecialist } from "@/lib/types";
 import { APPT_LABEL, DOC_LABEL, isActive } from "@/lib/types";
 import { correctStatus as previewCorrection, type Correction } from "@/lib/statusEngine";
 import { correctStatus, editReferralDetails, performAction } from "@/lib/actions";
@@ -10,6 +10,7 @@ import { Card, SectionHeading, InlineError } from "@/components/ui";
 import { Dialog } from "@/components/Dialog";
 import { Icon, type IconName } from "@/components/Icon";
 import { toast } from "@/components/Toast";
+import { SpecialistFields } from "@/components/SpecialistFields";
 import { fmtDateTime, isoToNyInput, nyInputToIso } from "@/lib/tz";
 
 type Panel = "edit" | "followup" | "correct";
@@ -21,7 +22,7 @@ const primaryBtn = "btn btn-primary";
 // Admin-only corrections, kept apart from the day-to-day mission actions so
 // they are not clicked by accident. Short tasks open as a modal; the longer
 // edit form opens as a side drawer (full screen on phones).
-export function AdminTools({ referral, providers }: { referral: Referral; providers: ReferringProvider[] }) {
+export function AdminTools({ referral, providers, saved }: { referral: Referral; providers: ReferringProvider[]; saved: SavedSpecialist[] }) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const close = () => setPanel(null);
 
@@ -54,7 +55,7 @@ export function AdminTools({ referral, providers }: { referral: Referral; provid
 
       <Dialog open={panel === "edit"} onClose={close} variant="drawer" title="Edit Details"
         description="Changes descriptive details only. Statuses change through actions or Correct status.">
-        <EditDetails referral={referral} providers={providers} onDone={close} />
+        <EditDetails referral={referral} providers={providers} saved={saved} onDone={close} />
       </Dialog>
       <Dialog open={panel === "followup"} onClose={close} title="Set Follow-Up Date"
         description="Only the date changes — the status stays as it is.">
@@ -90,7 +91,7 @@ function ErrorLine({ error }: { error: string | null }) {
 }
 
 // ---------------------------------------------------------------------------
-function EditDetails({ referral, providers, onDone }: { referral: Referral; providers: ReferringProvider[]; onDone: () => void }) {
+function EditDetails({ referral, providers, saved, onDone }: { referral: Referral; providers: ReferringProvider[]; saved: SavedSpecialist[]; onDone: () => void }) {
   const { pending, error, save } = useSave();
   const openYmd = isoToNyInput(referral.referral_date).slice(0, 10);
   const slotEditable = ["appointment_scheduled", "appointment_rescheduled", "appointment_confirmed", "appointment_completed"]
@@ -159,23 +160,11 @@ function EditDetails({ referral, providers, onDone }: { referral: Referral; prov
             )}
           </div>
         )}
-        <div>
-          <label className={label}>Specialist</label>
-          <input className={input} value={f.specialist_name} onChange={(e) => set("specialist_name", e.target.value)} />
-        </div>
-        <div>
-          <label className={label}>Specialty</label>
-          <input className={input} value={f.specialty} onChange={(e) => set("specialty", e.target.value)} />
-        </div>
-        <div>
-          <label className={label}>Specialist phone</label>
-          <input className={`${input} num`} value={f.specialist_phone} onChange={(e) => set("specialist_phone", e.target.value)} />
-        </div>
-        <div>
-          <label className={label}>Specialist fax</label>
-          <input className={`${input} num`} value={f.specialist_fax} onChange={(e) => set("specialist_fax", e.target.value)} />
-        </div>
       </div>
+      <fieldset className="rounded-xl2 border border-line bg-surface-neutral p-4">
+        <legend className="px-1 text-sm font-semibold text-ink">Specialist</legend>
+        <SpecialistFields idPrefix="ed" value={f} onChange={(s) => setF((cur) => ({ ...cur, ...s }))} saved={saved} optionalLabel={false} />
+      </fieldset>
       <ErrorLine error={error} />
       <button type="submit" className={primaryBtn} disabled={pending}>{pending ? "Saving…" : "Save Details"}</button>
     </form>

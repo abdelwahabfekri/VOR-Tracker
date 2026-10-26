@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getMe, getProviders } from "@/lib/data";
+import { getMe, getProviders, getSavedSpecialists } from "@/lib/data";
 import { NewReferralForm } from "@/components/NewReferralForm";
 import { PageHeader } from "@/components/ui";
 
@@ -9,7 +9,7 @@ export default async function NewReferralPage() {
   if (!me) redirect("/login");
   if (me.role !== "admin") redirect("/tracking");
 
-  const providers = await getProviders();
+  const [providers, saved] = await Promise.all([getProviders(), getSavedSpecialists()]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -24,7 +24,7 @@ export default async function NewReferralPage() {
           </>
         }
       />
-      <NewReferralForm providers={providers} />
+      <NewReferralForm providers={providers} saved={saved} />
     </div>
   );
 }

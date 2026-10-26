@@ -158,11 +158,10 @@ export function QuickActions({
         open={prompt === "decline"}
         onClose={() => setPrompt(null)}
         title="Patient Declined"
-        description="This closes the referral as Declined. It can be undone later only with Correct status."
+        description="This closes the referral as Declined. The reason is shown to the referring provider. It can be undone later only with Correct status."
       >
-        <ReasonForm
-          confirmLabel="Confirm Decline"
-          onConfirm={(reason) => fromPrompt({ kind: "patient_declined" }, reason)}
+        <DeclineForm
+          onConfirm={(reason) => fromPrompt({ kind: "patient_declined", reason })}
           onCancel={() => setPrompt(null)}
         />
       </Dialog>
@@ -223,35 +222,43 @@ function SlotForm({
   );
 }
 
-function ReasonForm({
+function DeclineForm({
   onConfirm,
   onCancel,
-  confirmLabel = "Confirm",
 }: {
-  onConfirm: (reason?: string) => Promise<boolean>;
+  onConfirm: (reason: string) => Promise<boolean>;
   onCancel: () => void;
-  confirmLabel?: string;
 }) {
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!reason.trim()) return;
     setPending(true);
-    await onConfirm(reason.trim() || undefined);
+    await onConfirm(reason.trim());
     setPending(false);
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="field-label" htmlFor="reason">Reason <span className="font-normal text-muted">(optional)</span></label>
-        <input id="reason" type="text" value={reason} onChange={(e) => setReason(e.target.value)} className="field" autoFocus />
+        <label className="field-label" htmlFor="decline-reason">Reason for decline</label>
+        <textarea
+          id="decline-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="field min-h-[84px]"
+          placeholder="e.g. Wants an office closer to home"
+          required
+          autoFocus
+        />
+        <p className="mt-1 text-xs text-muted">Visible to the provider. No clinical details.</p>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn btn-danger-solid" disabled={pending}>
-          {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : confirmLabel}
+        <button type="submit" className="btn btn-danger-solid" disabled={pending || !reason.trim()}>
+          {pending ? <><Spinner className="h-3.5 w-3.5" /> Saving…</> : "Confirm Decline"}
         </button>
       </div>
     </form>

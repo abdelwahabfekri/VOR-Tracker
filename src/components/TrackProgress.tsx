@@ -126,6 +126,11 @@ export function ReferralJourney({ referral, history }: { referral: Referral; his
             <Icon name={model.phase === "incomplete" ? "alert" : "ban"} className={`mt-0.5 h-4 w-4 ${model.phase === "incomplete" ? "text-overdue" : "text-muted"}`} />
             <div>
               <div className="font-semibold text-ink">Journey ended: {model.endedLabel}</div>
+              {model.endedReason && (
+                <div className="mt-0.5 text-ink">
+                  <span className="font-medium">Reason:</span> {model.endedReason}
+                </div>
+              )}
               <div className="text-xs text-muted">
                 {model.phase === "incomplete"
                   ? "Records could not be obtained. This is an incomplete closure, not a success."

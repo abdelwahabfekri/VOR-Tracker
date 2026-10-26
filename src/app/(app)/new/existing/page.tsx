@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getMe, getProviders } from "@/lib/data";
+import { getMe, getProviders, getSavedSpecialists } from "@/lib/data";
 import { ExistingReferralForm } from "@/components/ExistingReferralForm";
 import { PageHeader } from "@/components/ui";
 import { Icon } from "@/components/Icon";
@@ -10,7 +10,7 @@ export default async function ExistingReferralPage() {
   if (!me) redirect("/login");
   if (me.role !== "admin") redirect("/tracking");
 
-  const providers = await getProviders();
+  const [providers, saved] = await Promise.all([getProviders(), getSavedSpecialists()]);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -21,7 +21,7 @@ export default async function ExistingReferralPage() {
         title="Add Existing Referral"
         description="For a referral already in progress outside the tracker. It is saved at its current stage — earlier steps are not recreated."
       />
-      <ExistingReferralForm providers={providers} />
+      <ExistingReferralForm providers={providers} saved={saved} />
     </div>
   );
 }

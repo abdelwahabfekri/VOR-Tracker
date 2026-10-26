@@ -19,6 +19,7 @@ import type {
   AppointmentStatus,
   DocumentStatus,
   HistoryTrack,
+  StatusHistoryEntry,
 } from "./types";
 import { APPT_LABEL, DOC_LABEL, TERMINAL_APPT, TERMINAL_DOC, isReferralClosed } from "./types";
 
@@ -38,7 +39,7 @@ export type Action =
   | { kind: "mark_completed" }         // post-call: visit happened
   | { kind: "mark_no_show" }           // post-call: no-show -> silent revert
   | { kind: "reschedule"; slot: string }
-  | { kind: "patient_declined" }
+  | { kind: "patient_declined"; reason: string } // free text, shown to providers
   | { kind: "cancel" }
   | { kind: "reopen_contact" }         // re-engage a parked (not-replying) referral
   // Track 2
@@ -58,6 +59,8 @@ export interface HistoryEvent {
   from: string | null;
   to: string;
   note_code: string;
+  // structured text the action itself carries (e.g. the decline reason)
+  note_text?: string | null;
 }
 
 export interface TransitionFields {
@@ -136,6 +139,9 @@ export function assertAllowed(r: Referral, action: Action): void {
   }
   if ((action.kind === "book_appointment" || action.kind === "reschedule") && isNaN(Date.parse(action.slot))) {
     throw new Error("Pick a valid appointment date.");
+  }
+  if (action.kind === "patient_declined" && !action.reason?.trim()) {
+    throw new Error("Enter why the patient declined.");
   }
 }
 
@@ -274,7 +280,7 @@ export function applyAction(r: Referral, action: Action, nowDate: Date = new Dat
     case "patient_declined":
       return {
         fields: { appointment_state: "patient_declined", next_action_due: null, last_action_at: nowIso, closed_at: nowIso },
-        events: [appt("patient_declined", "declined")],
+        events: [{ ...appt("patient_declined", "declined"), note_text: action.reason.trim() }],
       };
 
     case "cancel":
@@ -346,6 +352,23 @@ export function applyAction(r: Referral, action: Action, nowDate: Date = new Dat
       };
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Why the patient declined, from the referral's history: the latest decline
+// event (or the existing-referral baseline that entered it as declined). The
+// note may be "<reason> — <note>". Null when no reason was recorded (e.g.
+// declines logged before reasons existed, or set via Correct status).
+// ---------------------------------------------------------------------------
+export function declineReason(history: StatusHistoryEntry[]): string | null {
+  const desc = [...history].sort((a, b) => b.changed_at.localeCompare(a.changed_at));
+  const e = desc.find(
+    (h) =>
+      (h.track === "appointment" && h.to_state === "patient_declined") ||
+      (h.note_code === "existing_baseline" && h.to_state.startsWith("patient_declined/"))
+  );
+  const code = (e?.note_code ?? "").replace(/^inbound_/, "");
+  return e && (code === "declined" || code === "existing_baseline") ? e.note_text?.trim() || null : null;
 }
 
 // ---------------------------------------------------------------------------
