@@ -6,6 +6,7 @@
 
 import type { Referral, StatusHistoryEntry } from "./types";
 import { APPT_LABEL, DOC_LABEL, isReferralClosed } from "./types";
+import { declineReason } from "./statusEngine";
 import { isoToNyInput, nyInputToIso, fmtDate } from "./tz";
 
 export type ActivityTag = "NEW THIS WEEK" | "UPDATED THIS WEEK" | "NO CHANGE THIS WEEK";
@@ -139,6 +140,14 @@ export function changeSummary(r: Referral, periodEvents: StatusHistoryEntry[], p
 
 // ---- Rows ---------------------------------------------------------------------------
 
+// A declined referral carries its reason so the provider sees why.
+function apptStatusText(r: Referral, history: StatusHistoryEntry[]): string {
+  const label = APPT_LABEL[r.appointment_state];
+  if (r.appointment_state !== "patient_declined") return label;
+  const reason = declineReason(history);
+  return reason ? `${label} — ${reason}` : label;
+}
+
 // history: every status_history row for these referrals (any order).
 export function buildReportRows(
   referrals: Referral[],
@@ -175,7 +184,7 @@ export function buildReportRows(
           code: r.code,
           openDate: fmtDate(r.referral_date),
           specialist: r.specialist_name || "—",
-          appointmentStatus: APPT_LABEL[r.appointment_state],
+          appointmentStatus: apptStatusText(r, all),
           recordsStatus: DOC_LABEL[r.document_state],
           lastChange: fmtDate(lastChange),
           activity: activityTag(r, periodEvents, p),

@@ -21,6 +21,7 @@ Built with Next.js (App Router) + Supabase, deploys on Vercel.
 - **New referral** (admin) — records the patient MRN and generates the `VOR-` tracking code.
 - **Add existing referral** (admin) — enters a referral already in progress at its real current stage, without inventing earlier history.
 - **Weekly Reports** (admin) — one report per internal provider: active referrals plus anything that changed or closed in the period, sorted by open date, with *Weekly activity* and *Follow-up* tags. Copies as a formatted table for Outlook (plain-text fallback). The app never sends email.
+- **Decline reasons** — declining a referral requires a reason from a fixed, non-clinical list ("Other" requires details). Providers see it on the referral's journey card ("Journey ended … Reason: …") and next to *Patient declined* in the weekly report. Declines logged before this change show no reason.
 - **Stale tags** — `NO UPDATE 7+ DAYS` / `14+ DAYS` on referrals with no real action for that long (separate from *Overdue*).
 - **Roles** — `admin` (you: full control) and `viewer` (providers: read-only).
 

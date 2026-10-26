@@ -18,6 +18,7 @@ import { Card, ApptChip, DocChip, InlineError, Mrn, Spinner } from "@/components
 import { Icon, type IconName } from "@/components/Icon";
 import { SuccessCard } from "@/components/NewReferralForm";
 import { fmtDate, fmtDateTime, isoToNyInput, nyInputToIso } from "@/lib/tz";
+import { DECLINE_REASONS } from "@/lib/statusEngine";
 
 const input = "field";
 const label = "field-label";
@@ -53,6 +54,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
     completed: "",
     closed: "",
     unavailable_reason: "",
+    decline_reason: "",
     due: "", // empty = use the suggestion
   });
   const set = (k: keyof typeof f, v: string) => setF((s) => ({ ...s, [k]: v }));
@@ -81,6 +83,7 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
     completed_at: need.completedAt ? dtIso(f.completed) : null,
     closed_at: need.closedAt ? dayIso(f.closed) : null,
     unavailable_reason: need.unavailableReason ? f.unavailable_reason || null : null,
+    decline_reason: need.declineReason ? f.decline_reason || null : null,
     next_action_due: need.nextActionDue && f.due ? dtIso(f.due) : null,
   };
 
@@ -234,6 +237,15 @@ export function ExistingReferralForm({ providers }: { providers: ReferringProvid
                 <select id="ex-reason" className={input} value={f.unavailable_reason} onChange={(e) => set("unavailable_reason", e.target.value)} required>
                   <option value="">Choose…</option>
                   {UNAVAILABLE_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            )}
+            {need.declineReason && (
+              <div>
+                <label htmlFor="ex-decline" className={label}>Reason for decline</label>
+                <select id="ex-decline" className={input} value={f.decline_reason} onChange={(e) => set("decline_reason", e.target.value)} required>
+                  <option value="">Choose…</option>
+                  {DECLINE_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
             )}

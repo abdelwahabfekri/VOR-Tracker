@@ -70,8 +70,11 @@ function toRpcEvents(
     from_state: e.from,
     to_state: e.to,
     note_code: e.note_code,
-    // a typed note belongs to the first (primary) event of the action
-    note_text: e.note_text ?? (i === 0 ? note?.trim() || null : null),
+    // a typed note belongs to the first (primary) event of the action, after
+    // any structured text the action carries (e.g. "<decline reason> — <note>")
+    note_text: i === 0
+      ? [e.note_text?.trim(), note?.trim()].filter(Boolean).join(" — ") || null
+      : e.note_text ?? null,
     changed_at: e.changed_at ?? null,
   }));
 }

@@ -9,7 +9,7 @@
 
 import type { AppointmentStatus, DocumentStatus } from "./types";
 import { TERMINAL_APPT, TERMINAL_DOC } from "./types";
-import { CAPS, suggestDue, type HistoryEvent, type TransitionFields } from "./statusEngine";
+import { CAPS, isDeclineReason, suggestDue, type HistoryEvent, type TransitionFields } from "./statusEngine";
 
 export const EXISTING_APPT_STATES: AppointmentStatus[] = [
   "referral_created",
@@ -53,6 +53,7 @@ export function neededFields(a: AppointmentStatus, d: DocumentStatus) {
     completedAt: a === "appointment_completed",
     closedAt: terminal,
     unavailableReason: d === "documents_unavailable",
+    declineReason: a === "patient_declined",
     contactAttempts: ["referral_created", "patient_contacted", "awaiting_booking", "patient_not_replying"].includes(a),
     rescheduleCount: ["appointment_scheduled", "appointment_confirmed", "appointment_rescheduled", "appointment_completed"].includes(a),
     documentAttempts: d === "documents_requested" || d === "documents_unavailable",
@@ -78,6 +79,7 @@ export interface ExistingReferralInput {
   completed_at: string | null; // ISO
   closed_at: string | null; // ISO
   unavailable_reason: string | null;
+  decline_reason: string | null;
   next_action_due: string | null; // ISO; null = use the suggestion
 }
 
@@ -127,6 +129,9 @@ export function validateExisting(i: ExistingReferralInput, now: Date = new Date(
   }
   if (need.unavailableReason && !(UNAVAILABLE_REASONS as readonly string[]).includes(i.unavailable_reason ?? "")) {
     return "Pick why the records are unavailable.";
+  }
+  if (need.declineReason && !isDeclineReason(i.decline_reason)) {
+    return "Pick why the patient declined.";
   }
 
   if (i.last_action_at) {
@@ -196,7 +201,7 @@ export function buildExisting(
         // "<appointment_state>/<document_state>" — the stage it entered the tracker at
         to: `${i.appointment_state}/${i.document_state}`,
         note_code: "existing_baseline",
-        note_text: need.unavailableReason ? i.unavailable_reason : null,
+        note_text: need.unavailableReason ? i.unavailable_reason : need.declineReason ? i.decline_reason : null,
       },
     ],
   };
