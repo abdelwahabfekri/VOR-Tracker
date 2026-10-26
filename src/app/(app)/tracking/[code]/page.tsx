@@ -4,7 +4,7 @@ import { getMe, getReferralByCode, getHistory, getProviders } from "@/lib/data";
 import { ReferralJourney } from "@/components/TrackProgress";
 import { CodeChip, ApptChip, DocChip, AttemptBadge, Card, StaleChip, Mrn, SectionHeading } from "@/components/ui";
 import { Icon } from "@/components/Icon";
-import { CAPS, isDeclineReasonEvent, staleTag } from "@/lib/statusEngine";
+import { CAPS, staleTag } from "@/lib/statusEngine";
 import { AdminTools } from "@/components/AdminTools";
 import { DetailActions } from "@/components/DetailActions";
 import { DeleteReferral } from "@/components/DeleteReferral";
@@ -22,14 +22,10 @@ export default async function ReferralDetail({ params }: { params: { code: strin
   const referral = await getReferralByCode(params.code);
   if (!referral) notFound();
   const isAdmin = me.role === "admin";
-  const [fullHistory, providers] = await Promise.all([
+  const [history, providers] = await Promise.all([
     getHistory(referral.id),
     isAdmin ? getProviders() : Promise.resolve([]),
   ]);
-  // Providers get the decline reason in the weekly report email only.
-  const history = isAdmin
-    ? fullHistory
-    : fullHistory.map((e) => (isDeclineReasonEvent(e) ? { ...e, note_text: null } : e));
 
   return (
     <div className="space-y-6">
